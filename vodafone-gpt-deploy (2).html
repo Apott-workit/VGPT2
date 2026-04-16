@@ -1,0 +1,3967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VodafoneGPT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vodafone+Rg:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── VODAFONE DESIGN TOKENS ─────────────────────────────────────── */
+  :root {
+    --vf-red:        #E60000;
+    --vf-red-dark:   #BD0000;
+    --vf-red-light:  #FF1A1A;
+    --vf-white:      #FFFFFF;
+    --vf-black:      #0D0D0D;
+    --vf-grey-05:    #F4F4F4;
+    --vf-grey-10:    #EBEBEB;
+    --vf-grey-20:    #D9D9D9;
+    --vf-grey-40:    #999999;
+    --vf-grey-60:    #666666;
+    --vf-grey-80:    #333333;
+    --vf-beige:      #F9F7F5;
+    --vf-blue:       #007BC2;
+    --vf-blue-light: #EBF5FC;
+    --vf-green:      #1A8A00;
+    --vf-green-light:#EAF5E7;
+    --vf-amber:      #C47700;
+    --vf-amber-light:#FFF4E0;
+    --vf-purple:     #5E2750;
+    --vf-teal:       #00697C;
+
+    --radius-sm:  4px;
+    --radius-md:  8px;
+    --radius-lg:  16px;
+    --radius-xl:  24px;
+    --radius-pill:999px;
+
+    --shadow-sm:  0 1px 3px rgba(0,0,0,.08);
+    --shadow-md:  0 4px 12px rgba(0,0,0,.10);
+    --shadow-lg:  0 8px 32px rgba(0,0,0,.12);
+    --shadow-xl:  0 16px 48px rgba(0,0,0,.16);
+
+    --font-sans: 'Vodafone Rg', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+    --transition: 200ms cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ─── RESET ──────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+  body { font-family: var(--font-sans); background: var(--vf-grey-05); color: var(--vf-black); line-height: 1.5; }
+  img, svg { display: block; }
+  button { font-family: inherit; cursor: pointer; border: none; background: none; }
+  input, textarea { font-family: inherit; }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── UTILITIES ──────────────────────────────────────────────────── */
+  .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0,0,0,0); }
+  .flex { display:flex; }
+  .flex-col { flex-direction:column; }
+  .items-center { align-items:center; }
+  .justify-between { justify-content:space-between; }
+  .justify-center { justify-content:center; }
+  .gap-2 { gap:8px; }
+  .gap-3 { gap:12px; }
+  .gap-4 { gap:16px; }
+  .gap-6 { gap:24px; }
+  .w-full { width:100%; }
+  .text-sm { font-size:.875rem; }
+  .text-xs { font-size:.75rem; }
+  .font-bold { font-weight:700; }
+  .truncate { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* ─── SCROLLBAR ──────────────────────────────────────────────────── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--vf-grey-20); border-radius:3px; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     APP SHELL
+  ═══════════════════════════════════════════════════════════════════ */
+  .app {
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--vf-white);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow-xl);
+  }
+
+  /* ─── SCREENS ─────────────────────────────────────────────────────── */
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--vf-white);
+    transform: translateX(100%);
+    transition: transform 380ms cubic-bezier(.4,0,.2,1);
+    will-change: transform;
+    z-index: 1;
+  }
+  .screen.active {
+    transform: translateX(0);
+    z-index: 2;
+  }
+  .screen.prev {
+    transform: translateX(-30%);
+    z-index: 1;
+  }
+
+  /* ─── SHARED NAV BAR ──────────────────────────────────────────────── */
+  .nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--vf-white);
+    border-bottom: 1px solid var(--vf-grey-10);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    min-height: 56px;
+  }
+  .nav-bar .logo-mark {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vodafone-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--vf-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .vodafone-icon svg { color: white; }
+  .nav-title {
+    font-size: 1.0625rem;
+    font-weight: 700;
+    color: var(--vf-black);
+    letter-spacing: -.01em;
+  }
+  .nav-title span { color: var(--vf-red); }
+  .nav-actions { display: flex; gap: 4px; }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--vf-grey-60);
+    transition: background var(--transition), color var(--transition);
+  }
+  .icon-btn:hover { background: var(--vf-grey-05); color: var(--vf-black); }
+
+  .back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--vf-red);
+    padding: 6px 8px 6px 4px;
+    border-radius: var(--radius-md);
+    transition: background var(--transition);
+  }
+  .back-btn:hover { background: var(--vf-grey-05); }
+
+  /* ─── PILL BADGE ──────────────────────────────────────────────────── */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  .badge-red    { background: var(--vf-red);         color: var(--vf-white); }
+  .badge-green  { background: var(--vf-green-light);  color: var(--vf-green); }
+  .badge-amber  { background: var(--vf-amber-light);  color: var(--vf-amber); }
+  .badge-blue   { background: var(--vf-blue-light);   color: var(--vf-blue); }
+  .badge-outline{ background: transparent; border: 1.5px solid var(--vf-grey-20); color: var(--vf-grey-60); }
+
+  /* ─── PRIMARY BUTTON ──────────────────────────────────────────────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 24px;
+    border-radius: var(--radius-pill);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: -.01em;
+    transition: all var(--transition);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-primary {
+    background: var(--vf-red);
+    color: var(--vf-white);
+    border: 2px solid var(--vf-red);
+  }
+  .btn-primary:hover { background: var(--vf-red-dark); border-color: var(--vf-red-dark); transform: translateY(-1px); box-shadow: 0 4px 16px rgba(230,0,0,.3); }
+  .btn-secondary {
+    background: var(--vf-white);
+    color: var(--vf-black);
+    border: 2px solid var(--vf-grey-20);
+  }
+  .btn-secondary:hover { border-color: var(--vf-black); }
+  .btn-ghost {
+    background: transparent;
+    color: var(--vf-red);
+    border: 2px solid transparent;
+    padding: 12px 16px;
+  }
+  .btn-ghost:hover { background: rgba(230,0,0,.06); }
+  .btn-sm { padding: 10px 18px; font-size: .875rem; }
+  .btn-xs { padding: 7px 14px; font-size: .8125rem; }
+  .btn-w-full { width: 100%; }
+
+  /* ─── CARD ────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--vf-white);
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--vf-grey-10);
+    overflow: hidden;
+  }
+  .card-elevated {
+    box-shadow: var(--shadow-md);
+    border-color: transparent;
+  }
+
+  /* ─── SCROLLABLE CONTENT AREA ─────────────────────────────────────── */
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 1 — HOMEPAGE
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-home .scroll-area { background: var(--vf-white); }
+
+  /* Hero */
+  .hero {
+    padding: 32px 20px 28px;
+    background: linear-gradient(160deg, #0D0D0D 0%, #1a0000 60%, #2a0000 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 110% 110%, rgba(230,0,0,.35) 0%, transparent 70%);
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 40% at -10% -10%, rgba(230,0,0,.15) 0%, transparent 60%);
+  }
+  .hero-content { position: relative; z-index: 1; }
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .hero-eyebrow-text {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.5);
+  }
+  .hero-eyebrow-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--vf-red);
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.1);
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: var(--radius-pill);
+    padding: 4px 12px 4px 6px;
+    font-size: .6875rem;
+    font-weight: 700;
+    color: rgba(255,255,255,.7);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .hero-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4ade80;
+    box-shadow: 0 0 6px #4ade80;
+    animation: pulse-green 2s ease-in-out infinite;
+  }
+  @keyframes pulse-green {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px #4ade80; }
+    50%       { opacity: .6; box-shadow: 0 0 12px #4ade80; }
+  }
+  .hero-headline {
+    font-size: 2.125rem;
+    font-weight: 700;
+    color: var(--vf-white);
+    letter-spacing: -.03em;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+  .hero-headline span { color: var(--vf-red); }
+  .hero-sub {
+    font-size: 1rem;
+    color: rgba(255,255,255,.65);
+    line-height: 1.55;
+    max-width: 340px;
+  }
+  .hero-ctas {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+  }
+
+  /* Trust strip */
+  .trust-strip {
+    display: flex;
+    gap: 0;
+    padding: 14px 20px;
+    background: var(--vf-grey-05);
+    border-bottom: 1px solid var(--vf-grey-10);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .trust-strip::-webkit-scrollbar { display: none; }
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    padding: 0 14px;
+    border-right: 1px solid var(--vf-grey-20);
+    flex-shrink: 0;
+  }
+  .trust-item:first-child { padding-left: 0; }
+  .trust-item:last-child { border-right: none; }
+  .trust-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--vf-green);
+    flex-shrink: 0;
+  }
+  .trust-label {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--vf-grey-60);
+  }
+
+  /* Section header */
+  .section-hd {
+    padding: 24px 20px 12px;
+  }
+  .section-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--vf-black);
+    letter-spacing: -.02em;
+  }
+  .section-sub {
+    font-size: .875rem;
+    color: var(--vf-grey-60);
+    margin-top: 2px;
+  }
+
+  /* Prompt chips */
+  .prompts-wrap {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .prompt-chip {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: var(--vf-white);
+    border: 1.5px solid var(--vf-grey-10);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition);
+    text-align: left;
+  }
+  .prompt-chip:hover {
+    border-color: var(--vf-red);
+    transform: translateX(3px);
+    box-shadow: var(--shadow-sm);
+  }
+  .prompt-chip-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.125rem;
+  }
+  .prompt-chip-text {
+    font-size: .9375rem;
+    color: var(--vf-black);
+    font-weight: 400;
+    flex: 1;
+  }
+  .prompt-chip-arrow {
+    color: var(--vf-grey-40);
+    flex-shrink: 0;
+    transition: transform var(--transition);
+  }
+  .prompt-chip:hover .prompt-chip-arrow { transform: translateX(4px); color: var(--vf-red); }
+
+  /* Capability cards */
+  .capability-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    padding: 0 20px 24px;
+  }
+  .capability-card {
+    border-radius: var(--radius-lg);
+    padding: 18px 16px;
+    border: 1.5px solid var(--vf-grey-10);
+    background: var(--vf-white);
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .capability-card:hover { border-color: var(--vf-red); box-shadow: var(--shadow-sm); }
+  .capability-card-icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+  }
+  .capability-card-title {
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--vf-black);
+    margin-bottom: 4px;
+  }
+  .capability-card-desc {
+    font-size: .75rem;
+    color: var(--vf-grey-60);
+    line-height: 1.4;
+  }
+
+  /* Privacy note */
+  .privacy-note {
+    margin: 0 20px 32px;
+    padding: 16px;
+    background: var(--vf-grey-05);
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--vf-grey-10);
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .privacy-note-icon { color: var(--vf-green); flex-shrink: 0; margin-top: 1px; }
+  .privacy-note-title { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .privacy-note-text  { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 2px; line-height: 1.45; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 2 — CHAT
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-chat { background: var(--vf-white); }
+
+  .chat-header-extra {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .vf-ai-avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--vf-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: .8rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -.02em;
+  }
+  .vf-ai-status {
+    display: flex;
+    flex-direction: column;
+  }
+  .vf-ai-name { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .vf-ai-online {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .6875rem;
+    color: var(--vf-green);
+    font-weight: 700;
+  }
+  .vf-ai-online::before {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--vf-green);
+  }
+
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .msg { display: flex; gap: 10px; align-items: flex-end; }
+  .msg-user { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+  }
+  .msg-avatar-ai   { background: var(--vf-red);    color: white; font-size: .65rem; }
+  .msg-avatar-user { background: var(--vf-grey-10); color: var(--vf-grey-60); }
+
+  .msg-body { flex: 1; display: flex; flex-direction: column; gap: 6px; max-width: calc(100% - 42px); }
+  .msg-user .msg-body { align-items: flex-end; }
+
+  .bubble {
+    padding: 12px 15px;
+    border-radius: 18px;
+    font-size: .9375rem;
+    line-height: 1.5;
+    max-width: 85%;
+  }
+  .bubble-ai {
+    background: var(--vf-grey-05);
+    color: var(--vf-black);
+    border-bottom-left-radius: 4px;
+  }
+  .bubble-user {
+    background: var(--vf-red);
+    color: white;
+    border-bottom-right-radius: 4px;
+  }
+  .bubble p + p { margin-top: 8px; }
+  .bubble strong { font-weight: 700; }
+
+  /* Rich result card */
+  .result-card {
+    background: var(--vf-white);
+    border: 1.5px solid var(--vf-grey-10);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    max-width: 100%;
+    box-shadow: var(--shadow-sm);
+  }
+  .result-card-header {
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+    border-bottom: 1px solid var(--vf-grey-10);
+  }
+  .result-card-icon-wrap {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  .result-card-title { font-size: .9375rem; font-weight: 700; color: var(--vf-black); }
+  .result-card-sub   { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 1px; }
+  .result-card-body  { padding: 14px 16px; }
+  .result-card-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--vf-grey-05);
+  }
+  .result-card-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .result-card-row-label { font-size: .8125rem; color: var(--vf-grey-60); }
+  .result-card-row-value { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .result-card-row-value.positive { color: var(--vf-green); }
+  .result-card-footer {
+    padding: 12px 16px;
+    background: var(--vf-grey-05);
+    display: flex;
+    gap: 8px;
+  }
+
+  /* Plan cards in chat */
+  .plan-card {
+    border: 1.5px solid var(--vf-grey-10);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--vf-white);
+    cursor: pointer;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+  .plan-card:hover, .plan-card.selected { border-color: var(--vf-red); box-shadow: 0 0 0 3px rgba(230,0,0,.1); }
+  .plan-card-top {
+    padding: 14px 16px 12px;
+    background: linear-gradient(135deg, #0D0D0D 0%, #2a0000 100%);
+    color: white;
+  }
+  .plan-card-name { font-size: .9375rem; font-weight: 700; }
+  .plan-card-data { font-size: 1.75rem; font-weight: 700; letter-spacing: -.04em; margin-top: 2px; }
+  .plan-card-data span { font-size: .9rem; font-weight: 400; letter-spacing: 0; opacity: .7; }
+  .plan-card-body { padding: 12px 16px; }
+  .plan-card-price { font-size: 1.25rem; font-weight: 700; color: var(--vf-black); }
+  .plan-card-price span { font-size: .875rem; font-weight: 400; color: var(--vf-grey-60); }
+  .plan-card-features { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; }
+  .plan-card-feature { display: flex; align-items: center; gap: 6px; font-size: .8125rem; color: var(--vf-grey-60); }
+  .plan-card-feature svg { color: var(--vf-green); flex-shrink: 0; }
+
+  /* Suggested prompts in chat */
+  .chat-suggestions {
+    display: flex;
+    gap: 8px;
+    padding: 8px 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    border-top: 1px solid var(--vf-grey-10);
+    background: var(--vf-white);
+    flex-shrink: 0;
+  }
+  .chat-suggestions::-webkit-scrollbar { display: none; }
+  .sugg-chip {
+    white-space: nowrap;
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    border: 1.5px solid var(--vf-grey-20);
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--vf-grey-80);
+    cursor: pointer;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .sugg-chip:hover { border-color: var(--vf-red); color: var(--vf-red); background: rgba(230,0,0,.04); }
+
+  /* Chat input */
+  .chat-input-area {
+    padding: 12px 16px 16px;
+    background: var(--vf-white);
+    border-top: 1px solid var(--vf-grey-10);
+    flex-shrink: 0;
+  }
+  .chat-input-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    background: var(--vf-grey-05);
+    border: 1.5px solid var(--vf-grey-20);
+    border-radius: 20px;
+    padding: 8px 8px 8px 16px;
+    transition: border-color var(--transition);
+  }
+  .chat-input-wrap:focus-within { border-color: var(--vf-red); background: var(--vf-white); }
+  .chat-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: .9375rem;
+    color: var(--vf-black);
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    line-height: 1.5;
+    padding: 4px 0;
+  }
+  .chat-input::placeholder { color: var(--vf-grey-40); }
+  .chat-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--vf-red);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all var(--transition);
+  }
+  .chat-send-btn:hover { background: var(--vf-red-dark); transform: scale(1.05); }
+
+  /* Typing indicator */
+  .typing-indicator {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    padding: 12px 15px;
+    background: var(--vf-grey-05);
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .typing-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--vf-grey-40);
+    animation: typing-bounce 1.4s infinite ease-in-out both;
+  }
+  .typing-dot:nth-child(1) { animation-delay: 0s; }
+  .typing-dot:nth-child(2) { animation-delay: .16s; }
+  .typing-dot:nth-child(3) { animation-delay: .32s; }
+  @keyframes typing-bounce {
+    0%, 80%, 100% { transform: scale(0.8); opacity:.4; }
+    40%           { transform: scale(1.1); opacity:1; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 3 — AGENT MARKETPLACE
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-agents .scroll-area { background: var(--vf-grey-05); padding-bottom: 24px; }
+
+  .agents-hero {
+    padding: 24px 20px;
+    background: var(--vf-black);
+    color: white;
+  }
+  .agents-hero-eyebrow {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--vf-red);
+    margin-bottom: 8px;
+  }
+  .agents-hero-title {
+    font-size: 1.625rem;
+    font-weight: 700;
+    letter-spacing: -.03em;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  .agents-hero-sub { font-size: .875rem; color: rgba(255,255,255,.6); line-height: 1.5; }
+
+  .agents-filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 16px 20px 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .agents-filter-row::-webkit-scrollbar { display: none; }
+  .filter-pill {
+    padding: 7px 16px;
+    border-radius: var(--radius-pill);
+    font-size: .8125rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1.5px solid var(--vf-grey-20);
+    background: var(--vf-white);
+    color: var(--vf-grey-60);
+    flex-shrink: 0;
+  }
+  .filter-pill.active, .filter-pill:hover { border-color: var(--vf-red); color: var(--vf-red); background: rgba(230,0,0,.05); }
+  .filter-pill.active { background: var(--vf-red); color: white; border-color: var(--vf-red); }
+
+  .agents-grid { padding: 8px 20px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+  /* Section headers within agents grid */
+  .agents-section-hd {
+    padding: 10px 0 4px;
+    border-bottom: 1.5px solid var(--vf-grey-10);
+    margin-bottom: 2px;
+  }
+  .agents-section-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--vf-black);
+    letter-spacing: -.01em;
+  }
+  .agents-section-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .agents-section-sub {
+    font-size: .75rem;
+    color: var(--vf-grey-60);
+    margin-top: 3px;
+    padding-left: 16px;
+  }
+
+  .agent-card {
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    border: 1.5px solid var(--vf-grey-10);
+    overflow: hidden;
+    cursor: pointer;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+  }
+  .agent-card:hover { border-color: var(--vf-grey-20); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+  .agent-card-banner {
+    height: 6px;
+    background: var(--vf-red);
+  }
+  .agent-card-inner { padding: 18px; }
+  .agent-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+  .agent-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+  .agent-card-meta { flex: 1; }
+  .agent-name { font-size: 1rem; font-weight: 700; color: var(--vf-black); letter-spacing: -.01em; }
+  .agent-tagline { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 3px; }
+  .agent-card-desc {
+    font-size: .875rem;
+    color: var(--vf-grey-60);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+  .agent-card-stats {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .agent-stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--vf-grey-05);
+    border-radius: var(--radius-md);
+    font-size: .75rem;
+  }
+  .agent-stat-label { color: var(--vf-grey-60); }
+  .agent-stat-value { font-weight: 700; color: var(--vf-black); }
+  .agent-permissions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .perm-chip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--vf-blue-light);
+    border-radius: var(--radius-sm);
+    font-size: .6875rem;
+    font-weight: 700;
+    color: var(--vf-blue);
+  }
+  .agent-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .agent-outcome {
+    flex: 1;
+    font-size: .8125rem;
+    color: var(--vf-grey-60);
+  }
+  .agent-outcome strong { color: var(--vf-green); font-weight: 700; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 4 — TASK EXECUTION FLOW
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-task { background: var(--vf-grey-05); }
+
+  .task-progress {
+    padding: 16px 20px;
+    background: var(--vf-white);
+    border-bottom: 1px solid var(--vf-grey-10);
+  }
+  .task-progress-label {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--vf-grey-60);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .progress-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+  .progress-step {
+    display: flex;
+    align-items: center;
+    flex: 1;
+  }
+  .progress-step-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--vf-grey-20);
+    background: var(--vf-white);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--vf-grey-40);
+    flex-shrink: 0;
+    transition: all var(--transition);
+    z-index: 1;
+  }
+  .progress-step.done .progress-step-circle    { background: var(--vf-green); border-color: var(--vf-green); color: white; }
+  .progress-step.active .progress-step-circle  { background: var(--vf-red);   border-color: var(--vf-red);   color: white; }
+  .progress-step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--vf-grey-10);
+    margin: 0 -2px;
+  }
+  .progress-step.done .progress-step-line { background: var(--vf-green); }
+
+  .task-feed { padding: 20px 20px 100px; display: flex; flex-direction: column; gap: 14px; }
+
+  .task-item {
+    background: var(--vf-white);
+    border-radius: var(--radius-lg);
+    border: 1.5px solid var(--vf-grey-10);
+    padding: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  .task-item-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .task-item-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+  }
+  .task-item-title { font-size: .9375rem; font-weight: 700; color: var(--vf-black); }
+  .task-item-desc  { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 2px; }
+
+  .question-options { display: flex; flex-direction: column; gap: 8px; }
+  .q-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border: 1.5px solid var(--vf-grey-10);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition);
+    font-size: .875rem;
+    color: var(--vf-black);
+    background: var(--vf-white);
+    text-align: left;
+  }
+  .q-option:hover, .q-option.selected { border-color: var(--vf-red); color: var(--vf-red); background: rgba(230,0,0,.04); }
+  .q-option.selected::after {
+    content: '✓';
+    font-weight: 700;
+    color: var(--vf-red);
+  }
+
+  .destination-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dest-card {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .dest-card:hover, .dest-card.selected { border-color: var(--vf-red); }
+  .dest-card-img {
+    height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    position: relative;
+  }
+  .dest-card-body {
+    padding: 10px 12px;
+    background: var(--vf-white);
+    border-top: 1px solid var(--vf-grey-10);
+  }
+  .dest-name { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .dest-sub  { font-size: .75rem; color: var(--vf-grey-60); margin-top: 1px; }
+  .dest-badge-row { display: flex; gap: 4px; margin-top: 5px; }
+  .dest-card .selected-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(230,0,0,.15);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+  }
+  .dest-card.selected .selected-overlay { display: flex; }
+
+  /* Agent working animation */
+  .agent-working {
+    background: linear-gradient(135deg, #0D0D0D 0%, #1a0000 100%);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    color: white;
+    border: none;
+  }
+  .agent-working-title {
+    font-size: .875rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .agent-working-sub {
+    font-size: .8125rem;
+    color: rgba(255,255,255,.6);
+    margin-bottom: 18px;
+  }
+  .agent-steps { display: flex; flex-direction: column; gap: 10px; }
+  .agent-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: .8125rem;
+  }
+  .agent-step-indicator {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: .65rem;
+    font-weight: 700;
+  }
+  .step-done    { background: var(--vf-green);         color: white; }
+  .step-active  { background: var(--vf-red);           color: white; animation: step-pulse 1s ease-in-out infinite; }
+  .step-pending { background: rgba(255,255,255,.1);    color: rgba(255,255,255,.4); }
+  @keyframes step-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+  .agent-step-label-done    { color: rgba(255,255,255,.6); text-decoration: line-through; }
+  .agent-step-label-active  { color: white; font-weight: 700; }
+  .agent-step-label-pending { color: rgba(255,255,255,.35); }
+
+  /* Confirmation card */
+  .confirm-card {
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    padding: 20px;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-md);
+  }
+  .confirm-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--vf-grey-10);
+  }
+  .confirm-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--vf-green-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+  }
+  .confirm-title { font-size: 1.0625rem; font-weight: 700; color: var(--vf-black); }
+  .confirm-sub   { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 2px; }
+  .confirm-details { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .confirm-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: .875rem;
+  }
+  .confirm-row-label { color: var(--vf-grey-60); }
+  .confirm-row-value { font-weight: 700; color: var(--vf-black); }
+  .confirm-row-value.red { color: var(--vf-red); }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 5 — TRUST & CONTROL
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-trust .scroll-area { background: var(--vf-grey-05); padding-bottom: 32px; }
+
+  .trust-hero {
+    padding: 24px 20px;
+    background: var(--vf-black);
+    color: white;
+  }
+  .trust-hero-title { font-size: 1.5rem; font-weight: 700; letter-spacing: -.025em; line-height: 1.2; margin-bottom: 8px; }
+  .trust-hero-sub { font-size: .875rem; color: rgba(255,255,255,.6); line-height: 1.5; }
+
+  .trust-section { padding: 20px 20px 0; }
+  .trust-section + .trust-section { padding-top: 8px; }
+  .trust-section-title {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--vf-grey-40);
+    margin-bottom: 10px;
+  }
+
+  .permission-card {
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .perm-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-bottom: 1px solid var(--vf-grey-05);
+  }
+  .perm-row:last-child { border-bottom: none; }
+  .perm-row-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.125rem;
+  }
+  .perm-row-content { flex: 1; }
+  .perm-row-title { font-size: .9375rem; font-weight: 700; color: var(--vf-black); }
+  .perm-row-desc  { font-size: .8rem; color: var(--vf-grey-60); margin-top: 1px; }
+  /* Toggle switch */
+  .toggle {
+    width: 46px;
+    height: 26px;
+    background: var(--vf-grey-20);
+    border-radius: var(--radius-pill);
+    position: relative;
+    cursor: pointer;
+    transition: background var(--transition);
+    flex-shrink: 0;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: white;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition);
+  }
+  .toggle.on { background: var(--vf-green); }
+  .toggle.on::after { transform: translateX(20px); }
+
+  .activity-card {
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .activity-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--vf-grey-05);
+    cursor: pointer;
+    transition: background var(--transition);
+  }
+  .activity-row:last-child { border-bottom: none; }
+  .activity-row:hover { background: var(--vf-grey-05); }
+  .activity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-top: 5px;
+    flex-shrink: 0;
+  }
+  .activity-content { flex: 1; }
+  .activity-title { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .activity-sub   { font-size: .8rem; color: var(--vf-grey-60); margin-top: 1px; }
+  .activity-time  { font-size: .75rem; color: var(--vf-grey-40); flex-shrink: 0; }
+  .undo-btn {
+    font-size: .75rem;
+    font-weight: 700;
+    color: var(--vf-red);
+    padding: 3px 8px;
+    border: 1.5px solid var(--vf-red);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    cursor: pointer;
+    transition: all var(--transition);
+    flex-shrink: 0;
+  }
+  .undo-btn:hover { background: var(--vf-red); color: white; }
+
+  .data-card {
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    padding: 18px;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .data-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .data-row:last-child { margin-bottom: 0; }
+  .data-row-icon { width: 20px; height: 20px; color: var(--vf-green); flex-shrink: 0; margin-top: 1px; }
+  .data-row-title { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .data-row-desc  { font-size: .8rem; color: var(--vf-grey-60); margin-top: 1px; line-height: 1.4; }
+
+  /* Vodafone identity */
+  .identity-card {
+    background: linear-gradient(135deg, var(--vf-red) 0%, #9c0000 100%);
+    border-radius: var(--radius-xl);
+    padding: 18px;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 10px;
+  }
+  .identity-avatar {
+    width: 48px;
+    height: 48px;
+    background: rgba(255,255,255,.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .identity-name  { font-size: 1rem; font-weight: 700; }
+  .identity-email { font-size: .8125rem; opacity: .7; margin-top: 1px; }
+  .identity-badge {
+    margin-top: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255,255,255,.2);
+    border-radius: var(--radius-pill);
+    padding: 3px 10px;
+    font-size: .6875rem;
+    font-weight: 700;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     SCREEN 6 — CLAUDE HANDOFF
+  ═══════════════════════════════════════════════════════════════════ */
+  #screen-claude { background: var(--vf-white); }
+
+  .handoff-banner {
+    padding: 16px 20px;
+    background: linear-gradient(135deg, #1a0a2e 0%, #0a0a1a 100%);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .handoff-claude-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .handoff-text { flex: 1; }
+  .handoff-title { font-size: .875rem; font-weight: 700; color: white; }
+  .handoff-sub   { font-size: .75rem; color: rgba(255,255,255,.5); margin-top: 1px; }
+  .handoff-close {
+    color: rgba(255,255,255,.4);
+    font-size: 1.25rem;
+    cursor: pointer;
+    padding: 4px;
+    transition: color var(--transition);
+  }
+  .handoff-close:hover { color: white; }
+
+  .handoff-explain {
+    margin: 16px;
+    padding: 14px;
+    background: rgba(124,58,237,.06);
+    border: 1.5px solid rgba(124,58,237,.15);
+    border-radius: var(--radius-lg);
+    font-size: .875rem;
+    color: var(--vf-grey-80);
+    line-height: 1.5;
+  }
+  .handoff-explain strong { color: #5b21b6; }
+
+  .claude-chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .bubble-claude {
+    background: linear-gradient(135deg, rgba(124,58,237,.08) 0%, rgba(79,70,229,.08) 100%);
+    border: 1px solid rgba(124,58,237,.15);
+    color: var(--vf-black);
+    border-bottom-left-radius: 4px;
+  }
+  .claude-avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .handoff-note {
+    margin: 0 16px 16px;
+    padding: 12px 14px;
+    background: var(--vf-grey-05);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--vf-grey-10);
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .handoff-note-icon { color: var(--vf-grey-40); flex-shrink: 0; margin-top: 1px; }
+  .handoff-note-text { font-size: .8rem; color: var(--vf-grey-60); line-height: 1.45; }
+  .handoff-note-text strong { color: var(--vf-grey-80); }
+  .return-btn {
+    margin: 0 16px 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--vf-white);
+    border: 1.5px solid var(--vf-red);
+    border-radius: var(--radius-pill);
+    font-size: .875rem;
+    font-weight: 700;
+    color: var(--vf-red);
+    cursor: pointer;
+    transition: all var(--transition);
+    justify-content: center;
+    width: calc(100% - 32px);
+  }
+  .return-btn:hover { background: var(--vf-red); color: white; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     V CREDITS SYSTEM
+  ═══════════════════════════════════════════════════════════════════ */
+
+  /* Credits pill in nav bar */
+  .credits-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px 5px 7px;
+    background: linear-gradient(135deg, #0D0D0D 0%, #1a0000 100%);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: all var(--transition);
+    border: 1px solid rgba(230,0,0,.25);
+    flex-shrink: 0;
+  }
+  .credits-pill:hover { border-color: var(--vf-red); transform: scale(1.02); }
+  .credits-icon {
+    width: 16px;
+    height: 16px;
+    background: var(--vf-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .credits-icon svg { color: white; }
+  .credits-amount {
+    font-size: .75rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -.01em;
+  }
+  .credits-amount span { color: rgba(255,255,255,.5); font-weight: 400; font-size: .6875rem; }
+
+  /* Agent cost badge on cards */
+  .agent-cost-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--vf-grey-05);
+    border-radius: var(--radius-md);
+    margin-bottom: 14px;
+  }
+  .agent-cost-label { font-size: .8rem; color: var(--vf-grey-60); }
+  .agent-cost-value {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--vf-black);
+  }
+  .agent-cost-icon {
+    width: 14px;
+    height: 14px;
+    background: var(--vf-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .agent-cost-icon svg { color: white; }
+  .agent-cost-free {
+    font-size: .8125rem;
+    font-weight: 700;
+    color: var(--vf-green);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Credit spend confirmation modal */
+  .modal-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 300ms ease;
+    backdrop-filter: blur(2px);
+  }
+  .modal-overlay.show { opacity: 1; pointer-events: all; }
+  .modal-sheet {
+    width: 100%;
+    background: var(--vf-white);
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    padding: 8px 20px 32px;
+    transform: translateY(100%);
+    transition: transform 340ms cubic-bezier(.4,0,.2,1);
+  }
+  .modal-overlay.show .modal-sheet { transform: translateY(0); }
+  .modal-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--vf-grey-20);
+    border-radius: 2px;
+    margin: 10px auto 20px;
+  }
+  .modal-title { font-size: 1.125rem; font-weight: 700; color: var(--vf-black); letter-spacing: -.02em; margin-bottom: 4px; }
+  .modal-sub   { font-size: .875rem; color: var(--vf-grey-60); margin-bottom: 20px; }
+  .modal-cost-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: linear-gradient(135deg, #0D0D0D 0%, #200000 100%);
+    border-radius: var(--radius-lg);
+    margin-bottom: 16px;
+  }
+  .modal-cost-left { display: flex; align-items: center; gap: 10px; }
+  .modal-cost-icon-lg {
+    width: 44px;
+    height: 44px;
+    background: var(--vf-red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -.02em;
+  }
+  .modal-cost-task { font-size: .9375rem; font-weight: 700; color: white; }
+  .modal-cost-desc { font-size: .8rem; color: rgba(255,255,255,.55); margin-top: 2px; }
+  .modal-cost-amount { text-align: right; }
+  .modal-cost-credits { font-size: 1.5rem; font-weight: 700; color: white; letter-spacing: -.03em; line-height: 1; }
+  .modal-cost-credits span { font-size: .8125rem; font-weight: 400; color: rgba(255,255,255,.5); }
+  .modal-cost-balance { font-size: .75rem; color: rgba(255,255,255,.4); margin-top: 3px; }
+
+  .modal-breakdown {
+    background: var(--vf-grey-05);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .modal-breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--vf-grey-10);
+    font-size: .875rem;
+  }
+  .modal-breakdown-row:last-child { border-bottom: none; }
+  .modal-breakdown-label { color: var(--vf-grey-60); }
+  .modal-breakdown-value { font-weight: 700; color: var(--vf-black); }
+  .modal-breakdown-value.red { color: var(--vf-red); }
+  .modal-breakdown-value.green { color: var(--vf-green); }
+
+  .modal-earn-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px 14px;
+    background: var(--vf-green-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: 20px;
+    border: 1px solid rgba(26,138,0,.15);
+  }
+  .modal-earn-note-icon { color: var(--vf-green); flex-shrink: 0; margin-top: 1px; }
+  .modal-earn-note-text { font-size: .8125rem; color: var(--vf-green); font-weight: 700; }
+  .modal-earn-note-sub  { font-size: .75rem; color: var(--vf-green); opacity: .8; margin-top: 1px; }
+
+  .modal-btns { display: flex; gap: 10px; }
+
+  /* ── SCREEN 7: V Credits wallet ── */
+  #screen-credits .scroll-area { background: var(--vf-grey-05); padding-bottom: 40px; }
+
+  .credits-hero {
+    padding: 28px 20px 24px;
+    background: linear-gradient(160deg, #0D0D0D 0%, #200000 60%, #300000 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  .credits-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 100% 100%, rgba(230,0,0,.4) 0%, transparent 65%);
+  }
+  .credits-hero-content { position: relative; z-index: 1; }
+  .credits-hero-eyebrow {
+    font-size: .6875rem;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.45);
+    margin-bottom: 16px;
+  }
+  .credits-balance-display {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .credits-balance-number {
+    font-size: 3.5rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -.06em;
+    line-height: 1;
+  }
+  .credits-balance-label {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--vf-red);
+    padding-bottom: 6px;
+    letter-spacing: -.01em;
+  }
+  .credits-renews {
+    font-size: .8125rem;
+    color: rgba(255,255,255,.45);
+    margin-bottom: 20px;
+  }
+  .credits-renews strong { color: rgba(255,255,255,.7); }
+  .credits-meter-wrap { margin-bottom: 20px; }
+  .credits-meter-track {
+    height: 6px;
+    background: rgba(255,255,255,.12);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+  .credits-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--vf-red), #FF6B00);
+    border-radius: 3px;
+    width: 68%;
+    transition: width 600ms ease;
+  }
+  .credits-meter-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: .6875rem;
+    color: rgba(255,255,255,.4);
+  }
+  .credits-hero-ctas { display: flex; gap: 10px; }
+
+  /* Plan bands */
+  .credits-plan-banner {
+    margin: 20px 20px 0;
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .credits-plan-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px;
+    border-bottom: 1px solid var(--vf-grey-05);
+  }
+  .credits-plan-row:last-child { border-bottom: none; }
+  .credits-plan-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+  .credits-plan-label { font-size: .9375rem; font-weight: 700; color: var(--vf-black); flex: 1; }
+  .credits-plan-sub   { font-size: .8rem; color: var(--vf-grey-60); margin-top: 1px; }
+  .credits-plan-amount {
+    font-size: .9375rem;
+    font-weight: 700;
+    color: var(--vf-red);
+    flex-shrink: 0;
+  }
+  .credits-plan-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: .6875rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-pill);
+    flex-shrink: 0;
+  }
+
+  /* How credits work */
+  .how-it-works {
+    margin: 16px 20px 0;
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .hiw-row {
+    display: flex;
+    gap: 14px;
+    padding: 16px;
+    border-bottom: 1px solid var(--vf-grey-05);
+    align-items: flex-start;
+  }
+  .hiw-row:last-child { border-bottom: none; }
+  .hiw-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--vf-red);
+    color: white;
+    font-size: .75rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .hiw-title { font-size: .9375rem; font-weight: 700; color: var(--vf-black); }
+  .hiw-desc  { font-size: .8125rem; color: var(--vf-grey-60); margin-top: 2px; line-height: 1.45; }
+
+  /* Transaction history */
+  .tx-list {
+    margin: 16px 20px 0;
+    background: var(--vf-white);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1.5px solid var(--vf-grey-10);
+    box-shadow: var(--shadow-sm);
+  }
+  .tx-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--vf-grey-05);
+  }
+  .tx-row:last-child { border-bottom: none; }
+  .tx-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .tx-detail { flex: 1; }
+  .tx-title  { font-size: .875rem; font-weight: 700; color: var(--vf-black); }
+  .tx-sub    { font-size: .75rem; color: var(--vf-grey-60); margin-top: 1px; }
+  .tx-amount {
+    font-size: .9375rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .tx-amount.debit  { color: var(--vf-red); }
+  .tx-amount.credit { color: var(--vf-green); }
+  .tx-time { font-size: .6875rem; color: var(--vf-grey-40); margin-top: 1px; text-align: right; }
+
+  /* Upgrade nudge */
+  .upgrade-nudge {
+    margin: 16px 20px 0;
+    background: linear-gradient(135deg, var(--vf-red) 0%, #9c0000 100%);
+    border-radius: var(--radius-xl);
+    padding: 18px;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    cursor: pointer;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+  .upgrade-nudge:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+  .upgrade-nudge-icon { font-size: 2rem; flex-shrink: 0; }
+  .upgrade-nudge-title { font-size: 1rem; font-weight: 700; color: white; letter-spacing: -.01em; }
+  .upgrade-nudge-sub   { font-size: .8125rem; color: rgba(255,255,255,.7); margin-top: 2px; line-height: 1.4; }
+  .upgrade-nudge-arrow { color: rgba(255,255,255,.5); flex-shrink: 0; margin-left: auto; }
+
+  /* Free chat note */
+  .free-chat-note {
+    margin: 10px 16px 0;
+    text-align: center;
+    font-size: .75rem;
+    color: var(--vf-grey-40);
+  }
+  .free-chat-note svg { display: inline; vertical-align: middle; margin-right: 3px; }
+
+  /* ═══════════════════════════════════════════════════════════════════
+     BOTTOM NAV
+  ═══════════════════════════════════════════════════════════════════ */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 430px;
+    max-width: 100%;
+    background: var(--vf-white);
+    border-top: 1px solid var(--vf-grey-10);
+    display: flex;
+    z-index: 100;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 4px 12px;
+    cursor: pointer;
+    transition: all var(--transition);
+    border: none;
+    background: none;
+    color: var(--vf-grey-40);
+  }
+  .bottom-nav-item.active   { color: var(--vf-red); }
+  .bottom-nav-item:hover    { color: var(--vf-grey-80); }
+  .bottom-nav-item svg      { transition: transform var(--transition); }
+  .bottom-nav-item.active svg { transform: scale(1.1); }
+  .bottom-nav-label { font-size: .6875rem; font-weight: 700; letter-spacing: .01em; }
+
+  /* ─── DEVICE FRAME ────────────────────────────────────────────────── */
+  @media (min-width: 500px) {
+    body { background: #1a1a1a; display: flex; align-items: flex-start; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+    .app {
+      border-radius: 44px;
+      height: 900px;
+      min-height: unset;
+      border: 10px solid #0a0a0a;
+      box-shadow: 0 0 0 2px #333, 0 40px 120px rgba(0,0,0,.8);
+      position: relative;
+    }
+    .app::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 16px;
+      background: #0a0a0a;
+      border-radius: 0 0 12px 12px;
+      z-index: 200;
+    }
+    .bottom-nav { border-radius: 0 0 32px 32px; }
+    .screen:first-child.active { border-radius: 32px; }
+  }
+
+  /* Fade-in on load */
+  @keyframes fade-up { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  .fade-up { animation: fade-up .4s ease both; }
+  .delay-1 { animation-delay: .08s; }
+  .delay-2 { animation-delay: .16s; }
+  .delay-3 { animation-delay: .24s; }
+  .delay-4 { animation-delay: .32s; }
+  .delay-5 { animation-delay: .40s; }
+
+  /* spinner for agent working */
+  .spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Horizontal plan scroll */
+  .plan-scroll { display: flex; gap: 12px; overflow-x: auto; scrollbar-width: none; padding: 0 0 2px; }
+  .plan-scroll::-webkit-scrollbar { display: none; }
+  .plan-scroll .plan-card { min-width: 200px; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 1 — HOMEPAGE
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen active" id="screen-home">
+    <!-- Nav -->
+    <nav class="nav-bar">
+      <div class="logo-mark">
+        <div class="vodafone-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <span class="nav-title">Vodafone<span>GPT</span></span>
+      </div>
+      <div class="nav-actions" style="gap:8px;">
+        <button class="credits-pill" onclick="goTo('screen-credits')" title="V Credits">
+          <div class="credits-icon">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="credits-amount">340 <span>credits</span></span>
+        </button>
+        <button class="icon-btn" onclick="goTo('screen-trust')" title="Privacy & Control">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="scroll-area">
+      <!-- Hero -->
+      <div class="hero fade-up">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <div class="hero-badge-dot"></div>
+            New · Powered by Vodafone AI
+          </div>
+          <h1 class="hero-headline">Your AI. Your<br>way. Your <span>network.</span></h1>
+          <p class="hero-sub">Ask anything, manage everything, and let our AI agents complete tasks on your behalf — securely, simply, and with you in control.</p>
+          <div class="hero-ctas">
+            <button class="btn btn-primary" onclick="goTo('screen-chat')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              Start chatting
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="goTo('screen-agents')">Explore agents</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust strip -->
+      <div class="trust-strip fade-up delay-1">
+        <div class="trust-item">
+          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span class="trust-label">Secure & private</span>
+        </div>
+        <div class="trust-item">
+          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span class="trust-label">Full visibility</span>
+        </div>
+        <div class="trust-item">
+          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          <span class="trust-label">You stay in control</span>
+        </div>
+        <div class="trust-item">
+          <svg class="trust-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span class="trust-label">GDPR compliant</span>
+        </div>
+      </div>
+
+      <!-- Start a conversation -->
+      <div class="section-hd fade-up delay-2">
+        <div class="section-title">What can I help with today?</div>
+        <div class="section-sub">Tap a suggestion or type your own question below</div>
+      </div>
+      <div class="prompts-wrap fade-up delay-2">
+        <button class="prompt-chip" onclick="goTo('screen-chat')">
+          <div class="prompt-chip-icon" style="background:#FEF2F2;">📱</div>
+          <span class="prompt-chip-text">Find me the best plan for my usage</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="prompt-chip" onclick="goTo('screen-chat')">
+          <div class="prompt-chip-icon" style="background:#F0FDF4;">🔄</div>
+          <span class="prompt-chip-text">Upgrade my phone</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="prompt-chip" onclick="goTo('screen-chat')">
+          <div class="prompt-chip-icon" style="background:#EFF6FF;">📄</div>
+          <span class="prompt-chip-text">Check my bill</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="prompt-chip" onclick="goTo('screen-task')">
+          <div class="prompt-chip-icon" style="background:#FFF7ED;">✈️</div>
+          <span class="prompt-chip-text">Book a holiday with roaming included</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="prompt-chip" onclick="goTo('screen-agents')">
+          <div class="prompt-chip-icon" style="background:#EFF6FF;">🛡️</div>
+          <span class="prompt-chip-text">Protect my family online with SecureNet</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+        <button class="prompt-chip" onclick="goTo('screen-chat')">
+          <div class="prompt-chip-icon" style="background:#F5F3FF;">🏠</div>
+          <span class="prompt-chip-text">Find the best broadband for my home</span>
+          <svg class="prompt-chip-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+
+      <!-- SecureNet featured card -->
+      <div style="padding: 0 20px 8px;" class="fade-up delay-3">
+        <div onclick="goTo('screen-agents')" style="
+          background: linear-gradient(135deg, #0a1628 0%, #0d2040 50%, #0a1628 100%);
+          border-radius: var(--radius-xl);
+          padding: 20px;
+          cursor: pointer;
+          position: relative;
+          overflow: hidden;
+          border: 1.5px solid rgba(99,179,237,.2);
+          box-shadow: 0 4px 24px rgba(0,0,0,.18);
+          transition: transform 200ms ease, box-shadow 200ms ease;
+        " onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 32px rgba(0,0,0,.25)'" onmouseout="this.style.transform='';this.style.boxShadow='0 4px 24px rgba(0,0,0,.18)'">
+          <!-- glow -->
+          <div style="position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 100% 0%, rgba(59,130,246,.18) 0%, transparent 65%);pointer-events:none;"></div>
+          <div style="position:relative;z-index:1;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="width:44px;height:44px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.375rem;flex-shrink:0;">🛡️</div>
+                <div>
+                  <div style="font-size:1rem;font-weight:700;color:white;letter-spacing:-.02em;">SecureNet</div>
+                  <div style="font-size:.75rem;color:rgba(255,255,255,.5);margin-top:1px;">Family digital protection · Powered by Vodafone AI</div>
+                </div>
+              </div>
+              <span style="background:rgba(59,130,246,.2);border:1px solid rgba(59,130,246,.35);border-radius:999px;padding:3px 10px;font-size:.6875rem;font-weight:700;color:#93C5FD;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;">New</span>
+            </div>
+            <div style="font-size:.9375rem;color:rgba(255,255,255,.8);line-height:1.55;margin-bottom:16px;">
+              One intelligent agent that protects your whole family online — adapting as your children grow from toddler to teenager to young adult.
+            </div>
+            <!-- Life stage pills -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:18px;">
+              <span style="padding:5px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);border-radius:999px;font-size:.75rem;font-weight:700;color:#93C5FD;">👶 Little ones</span>
+              <span style="padding:5px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);border-radius:999px;font-size:.75rem;font-weight:700;color:#93C5FD;">🧒 Primary age</span>
+              <span style="padding:5px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);border-radius:999px;font-size:.75rem;font-weight:700;color:#93C5FD;">🧑 Teens</span>
+              <span style="padding:5px 12px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);border-radius:999px;font-size:.75rem;font-weight:700;color:#93C5FD;">🎓 Young adults</span>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <div style="display:flex;gap:14px;">
+                <div style="text-align:center;">
+                  <div style="font-size:1.125rem;font-weight:700;color:white;">4</div>
+                  <div style="font-size:.6875rem;color:rgba(255,255,255,.4);">Life stages</div>
+                </div>
+                <div style="width:1px;background:rgba(255,255,255,.1);"></div>
+                <div style="text-align:center;">
+                  <div style="font-size:1.125rem;font-weight:700;color:white;">24/7</div>
+                  <div style="font-size:.6875rem;color:rgba(255,255,255,.4);">Active</div>
+                </div>
+                <div style="width:1px;background:rgba(255,255,255,.1);"></div>
+                <div style="text-align:center;">
+                  <div style="font-size:1.125rem;font-weight:700;color:white;">∞</div>
+                  <div style="font-size:.6875rem;color:rgba(255,255,255,.4);">Devices</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;font-size:.875rem;font-weight:700;color:#60A5FA;">
+                Set up now
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Capability highlights -->
+      <div class="section-hd fade-up delay-3">
+        <div class="section-title">Built to do more</div>
+        <div class="section-sub">Not just answers — actions</div>
+      </div>
+      <div class="capability-row fade-up delay-3">
+        <div class="capability-card" onclick="goTo('screen-agents')">
+          <div class="capability-card-icon">🤖</div>
+          <div class="capability-card-title">AI Agents</div>
+          <div class="capability-card-desc">Let VodafoneGPT complete real tasks on your behalf</div>
+        </div>
+        <div class="capability-card" onclick="goTo('screen-chat')">
+          <div class="capability-card-icon">💬</div>
+          <div class="capability-card-title">Smart Chat</div>
+          <div class="capability-card-desc">Ask anything about your account, plans and devices</div>
+        </div>
+        <div class="capability-card" onclick="goTo('screen-agents')">
+          <div class="capability-card-icon">👨‍👩‍👧‍👦</div>
+          <div class="capability-card-title">Family</div>
+          <div class="capability-card-desc">Homework help, schedules and kids' screen time</div>
+        </div>
+        <div class="capability-card" onclick="goTo('screen-agents')">
+          <div class="capability-card-icon">🍽️</div>
+          <div class="capability-card-title">Dining & Life</div>
+          <div class="capability-card-desc">Book tables, find events and manage life admin</div>
+        </div>
+      </div>
+
+      <!-- Privacy note -->
+      <div class="privacy-note fade-up delay-4">
+        <div class="privacy-note-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="privacy-note-title">Your data stays with Vodafone</div>
+          <div class="privacy-note-text">VodafoneGPT is powered by our own AI, hosted in the UK. Your conversations are never shared with third parties or used to train external models.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 2 — CHAT
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-chat">
+    <nav class="nav-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <div class="chat-header-extra">
+        <div class="vf-ai-avatar">AI</div>
+        <div class="vf-ai-status">
+          <div class="vf-ai-name">VodafoneGPT</div>
+          <div class="vf-ai-online">Available now</div>
+        </div>
+      </div>
+      <div class="nav-actions" style="gap:6px;">
+        <button class="credits-pill" onclick="goTo('screen-credits')" title="V Credits">
+          <div class="credits-icon">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="credits-amount">340</span>
+        </button>
+        <button class="icon-btn" onclick="goTo('screen-claude')" title="Get more help">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="chat-messages scroll-area" id="chat-messages">
+      <!-- AI greeting -->
+      <div class="msg">
+        <div class="msg-avatar msg-avatar-ai">AI</div>
+        <div class="msg-body">
+          <div class="bubble bubble-ai">
+            <p>Hi Sarah 👋 I'm VodafoneGPT.</p>
+            <p>I can answer questions about your account, recommend plans, and complete tasks like upgrades or bill queries on your behalf. What would you like to do today?</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- User message -->
+      <div class="msg msg-user">
+        <div class="msg-avatar msg-avatar-user">S</div>
+        <div class="msg-body">
+          <div class="bubble bubble-user">Find me the best plan for my usage</div>
+        </div>
+      </div>
+
+      <!-- AI analysing -->
+      <div class="msg">
+        <div class="msg-avatar msg-avatar-ai">AI</div>
+        <div class="msg-body">
+          <div class="bubble bubble-ai">
+            <p>I've looked at your last 3 months of usage. Here's what I found:</p>
+          </div>
+          <!-- Bill summary card -->
+          <div class="result-card">
+            <div class="result-card-header">
+              <div>
+                <div class="result-card-title">📊 Your usage summary</div>
+                <div class="result-card-sub">June – August 2025</div>
+              </div>
+              <span class="badge badge-blue">Verified</span>
+            </div>
+            <div class="result-card-body">
+              <div class="result-card-row">
+                <span class="result-card-row-label">Avg. monthly data</span>
+                <span class="result-card-row-value">28.4 GB</span>
+              </div>
+              <div class="result-card-row">
+                <span class="result-card-row-label">Current plan</span>
+                <span class="result-card-row-value">30 GB · £32/mo</span>
+              </div>
+              <div class="result-card-row">
+                <span class="result-card-row-label">Data headroom</span>
+                <span class="result-card-row-value" style="color:var(--vf-amber)">Only 1.6 GB spare</span>
+              </div>
+              <div class="result-card-row">
+                <span class="result-card-row-label">Potential saving</span>
+                <span class="result-card-row-value positive">Up to £4/mo</span>
+              </div>
+            </div>
+          </div>
+          <div class="bubble bubble-ai" style="margin-top:2px;">
+            <p>You're close to your limit every month. I'd recommend moving to <strong>Unlimited Lite</strong> — it removes data anxiety and saves you £4 a month.</p>
+          </div>
+          <!-- Plan comparison -->
+          <div class="plan-scroll" style="width:100%;">
+            <div class="plan-card selected">
+              <div class="plan-card-top">
+                <div class="plan-card-name">Unlimited Lite</div>
+                <div class="plan-card-data">∞ <span>data</span></div>
+              </div>
+              <div class="plan-card-body">
+                <div class="plan-card-price">£28<span>/mo</span></div>
+                <div class="plan-card-features">
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>No data cap · ever</div>
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>EU roaming included</div>
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Save £4/mo vs current</div>
+                </div>
+              </div>
+            </div>
+            <div class="plan-card">
+              <div class="plan-card-top">
+                <div class="plan-card-name">Unlimited Max</div>
+                <div class="plan-card-data">∞ <span>+ extras</span></div>
+              </div>
+              <div class="plan-card-body">
+                <div class="plan-card-price">£36<span>/mo</span></div>
+                <div class="plan-card-features">
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>5G Ultra access</div>
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Global roaming 50+ countries</div>
+                  <div class="plan-card-feature"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>Sky Sports Mobile included</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="result-card-footer" style="border-radius: var(--radius-lg); margin-top:2px;">
+            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="goTo('screen-task')">Switch to Unlimited Lite</button>
+            <button class="btn btn-secondary btn-sm">Compare all plans</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Agent offer -->
+      <div class="msg">
+        <div class="msg-avatar msg-avatar-ai">AI</div>
+        <div class="msg-body">
+          <div class="bubble bubble-ai">
+            <p>Want me to <strong>switch your plan right now</strong>? I can complete it in under 30 seconds — you'll receive an SMS confirmation and it takes effect from your next billing cycle.</p>
+          </div>
+          <div style="display:flex; gap:8px; margin-top:4px;">
+            <button class="btn btn-primary btn-sm" onclick="goTo('screen-task')">Yes, switch my plan</button>
+            <button class="btn btn-secondary btn-sm">I'll decide later</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Suggested chips -->
+    <div class="chat-suggestions">
+      <button class="sugg-chip" onclick="goTo('screen-claude')">Need more help?</button>
+      <button class="sugg-chip">Check my bill</button>
+      <button class="sugg-chip" onclick="goTo('screen-agents')">See all agents</button>
+      <button class="sugg-chip" onclick="goTo('screen-task')">Book holiday</button>
+    </div>
+
+    <!-- Input -->
+    <div class="chat-input-area">
+      <div class="chat-input-wrap">
+        <textarea class="chat-input" placeholder="Ask me anything…" rows="1"></textarea>
+        <button class="chat-send-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+      <div class="free-chat-note">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Chat &amp; questions are free · Agent actions use V Credits
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 3 — AGENT MARKETPLACE
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-agents">
+    <nav class="nav-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <span class="nav-title">AI <span>Agents</span></span>
+      <div class="nav-actions" style="gap:6px;">
+        <button class="credits-pill" onclick="goTo('screen-credits')" title="V Credits">
+          <div class="credits-icon">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="credits-amount">340</span>
+        </button>
+        <button class="icon-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="scroll-area">
+      <div class="agents-hero">
+        <div class="agents-hero-eyebrow">VodafoneGPT · AI Agents</div>
+        <h2 class="agents-hero-title">Your personal<br>AI workforce</h2>
+        <p class="agents-hero-sub">Specialist agents that act on your behalf — from booking holidays to upgrading your device. You approve. They execute.</p>
+      </div>
+
+      <div class="agents-filter-row">
+        <button class="filter-pill active" data-filter="all">All agents</button>
+        <button class="filter-pill" data-filter="vodafone">Vodafone</button>
+        <button class="filter-pill" data-filter="dining">Dining</button>
+        <button class="filter-pill" data-filter="family">Family</button>
+        <button class="filter-pill" data-filter="life">Everyday life</button>
+        <button class="filter-pill" data-filter="travel">Travel</button>
+      </div>
+
+      <div class="agents-grid" id="agents-grid">
+
+        <!-- ── SECTION HEADER: VODAFONE ── -->
+        <div class="agents-section-hd" data-section="vodafone">
+          <div class="agents-section-eyebrow">
+            <div class="agents-section-dot" style="background:var(--vf-red);"></div>
+            Vodafone services
+          </div>
+          <div class="agents-section-sub">Manage your account, plans and devices</div>
+        </div>
+
+        <!-- Travel Agent -->
+        <div class="agent-card" data-cat="vodafone travel" onclick="goTo('screen-task')">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#E60000,#FF6B00);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#FFF7ED; font-size:1.625rem;">✈️</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Travel Agent</div>
+                <div class="agent-tagline">Holidays, roaming & connectivity</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Books flights, hotels and car hire while automatically enabling the right roaming add-ons for your destination. Compares connectivity so you're never caught out abroad.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per task</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                40–80 credits
+              </span>
+            </div>
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. time saved</span><span class="agent-stat-value">2.5 hrs</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">📍 Location</div>
+              <div class="perm-chip">📋 Booking history</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Booked trip + roaming set up</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Upgrade Agent -->
+        <div class="agent-card" data-cat="vodafone" onclick="goTo('screen-chat')">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#0D0D0D,#444);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#F4F4F4; font-size:1.625rem;">📱</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Upgrade Agent</div>
+                <div class="agent-tagline">Devices, deals & checkout</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Recommends the right device based on your usage patterns and budget. Finds the best trade-in value and completes checkout — with your approval at each step.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per task</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                20 credits
+              </span>
+            </div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Medium</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. saving found</span><span class="agent-stat-value">£85</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">📱 Device info</div>
+              <div class="perm-chip">📋 Account data</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> New device ordered + old traded in</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bill Agent -->
+        <div class="agent-card" data-cat="vodafone" onclick="goTo('screen-chat')">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#007BC2,#0099E6);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#EBF5FC; font-size:1.625rem;">📄</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Bill Explainer</div>
+                <div class="agent-tagline">Understand & dispute charges</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Breaks down every line of your bill in plain English. Spots unusual charges, identifies savings, and raises disputes on your behalf if needed.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per task</span>
+              <span class="agent-cost-free">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Free with any plan
+              </span>
+            </div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Low</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Disputes resolved</span><span class="agent-stat-value">94%</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📋 Billing history</div>
+              <div class="perm-chip">📞 CS access</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Bill explained + disputes raised</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Smart Home -->
+        <div class="agent-card" data-cat="vodafone">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#5E2750,#8B3A6F);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#F5F0F4; font-size:1.625rem;">🏠</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Smart Home Agent</div>
+                <div class="agent-tagline">Broadband, mesh & devices</div>
+              </div>
+              <span class="badge badge-outline">Coming soon</span>
+            </div>
+            <div class="agent-card-desc">Sets up and optimises your home broadband, configures mesh Wi-Fi, and manages connected device settings. Identifies dead spots and fixes them.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">🏠 Home network</div>
+              <div class="perm-chip">📋 Device list</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Faster, reliable home connectivity</div>
+              <button class="btn btn-secondary btn-xs" style="opacity:.5;pointer-events:none;">Coming soon</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION HEADER: DINING & GOING OUT ── -->
+        <div class="agents-section-hd" data-section="dining">
+          <div class="agents-section-eyebrow">
+            <div class="agents-section-dot" style="background:#E8710A;"></div>
+            Dining &amp; going out
+          </div>
+          <div class="agents-section-sub">Reservations, tickets and local nights out</div>
+        </div>
+
+        <!-- OpenTable Restaurant Booker -->
+        <div class="agent-card" data-cat="dining">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#DA3743,#E8710A);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#FEF2F2; font-size:1.625rem;">🍽️</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Restaurant Booker</div>
+                <div class="agent-tagline">Tables via OpenTable & Resy</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Tell it your occasion, location and budget and it searches OpenTable and Resy for available tables, reads recent reviews and books the best match — including special requests like window seats or dietary needs.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per booking</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                5 credits
+              </span>
+            </div>
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. time saved</span><span class="agent-stat-value">18 min</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📍 Location</div>
+              <div class="perm-chip">📅 Calendar (read)</div>
+              <div class="perm-chip">📋 OpenTable linked</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Table booked + confirmation sent</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gig & Event Finder -->
+        <div class="agent-card" data-cat="dining">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#6D28D9,#A855F7);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#F5F3FF; font-size:1.625rem;">🎟️</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Gig & Event Finder</div>
+                <div class="agent-tagline">Tickets via Ticketmaster & Dice</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Tracks artists and venues you like, alerts you when tickets go on sale and buys them before they sell out — at face value. Works with Ticketmaster, Dice and See Tickets.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Medium</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Sell-outs avoided</span><span class="agent-stat-value">91%</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">🎵 Music preferences</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Tickets purchased + added to wallet</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Takeaway Orderer -->
+        <div class="agent-card" data-cat="dining">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#00B8D4,#0097A7);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#E0F7FA; font-size:1.625rem;">🛵</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Takeaway Agent</div>
+                <div class="agent-tagline">Orders via Deliveroo & Uber Eats</div>
+              </div>
+              <span class="badge badge-amber">Beta</span>
+            </div>
+            <div class="agent-card-desc">Remembers your go-to orders, applies discount codes automatically and places your usual order or suggests something new based on your mood. Works with Deliveroo, Uber Eats and Just Eat.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. saving found</span><span class="agent-stat-value">£3.40</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">📍 Delivery address</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Order placed + tracked</div>
+              <button class="btn btn-secondary btn-xs">Join waitlist</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION HEADER: FAMILY ── -->
+        <div class="agents-section-hd" data-section="family">
+          <div class="agents-section-eyebrow">
+            <div class="agents-section-dot" style="background:#0D9488;"></div>
+            Family
+          </div>
+          <div class="agents-section-sub">Protection, homework, activities and family life</div>
+        </div>
+
+        <!-- SecureNet -->
+        <div class="agent-card" data-cat="family" style="border-color:rgba(59,130,246,.25);">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#1D4ED8,#3B82F6,#60A5FA);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:linear-gradient(135deg,#1e3a5f,#1D4ED8); font-size:1.5rem;">🛡️</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">SecureNet</div>
+                <div class="agent-tagline">Family digital protection · All ages</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">One agent that protects your whole family online — intelligently adapting its rules and safeguards as your children grow through each life stage, from toddler to young adult.</div>
+
+            <!-- Life stage breakdown -->
+            <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#EFF6FF;border-radius:var(--radius-md);border:1px solid rgba(59,130,246,.15);">
+                <span style="font-size:1rem;flex-shrink:0;">👶</span>
+                <div style="flex:1;">
+                  <div style="font-size:.8125rem;font-weight:700;color:#1D4ED8;">Little ones · Under 6</div>
+                  <div style="font-size:.75rem;color:#3B82F6;margin-top:1px;">Full content blocking · Safe search only · Screen time limits</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#EFF6FF;border-radius:var(--radius-md);border:1px solid rgba(59,130,246,.15);">
+                <span style="font-size:1rem;flex-shrink:0;">🧒</span>
+                <div style="flex:1;">
+                  <div style="font-size:.8125rem;font-weight:700;color:#1D4ED8;">Primary age · 6–11</div>
+                  <div style="font-size:.75rem;color:#3B82F6;margin-top:1px;">Educational content · App allowlisting · Homework mode</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#EFF6FF;border-radius:var(--radius-md);border:1px solid rgba(59,130,246,.15);">
+                <span style="font-size:1rem;flex-shrink:0;">🧑</span>
+                <div style="flex:1;">
+                  <div style="font-size:.8125rem;font-weight:700;color:#1D4ED8;">Teens · 12–17</div>
+                  <div style="font-size:.75rem;color:#3B82F6;margin-top:1px;">Social media monitoring · Bedtime restrictions · Spend controls</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:#EFF6FF;border-radius:var(--radius-md);border:1px solid rgba(59,130,246,.15);">
+                <span style="font-size:1rem;flex-shrink:0;">🎓</span>
+                <div style="flex:1;">
+                  <div style="font-size:.8125rem;font-weight:700;color:#1D4ED8;">Young adults · 18+</div>
+                  <div style="font-size:.75rem;color:#3B82F6;margin-top:1px;">Scam & fraud detection · Identity alerts · Opt-in only</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="agent-cost-row" style="background:#EFF6FF;border:1px solid rgba(59,130,246,.15);">
+              <span class="agent-cost-label">Included in your plan</span>
+              <span class="agent-cost-free">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Free with Vodafone
+              </span>
+            </div>
+
+            <div class="agent-card-stats" style="margin-top:12px;">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Devices covered</span><span class="agent-stat-value">Unlimited</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Active</span><span class="agent-stat-value">24/7</span></div>
+            </div>
+            <div class="agent-permissions" style="margin-top:10px;">
+              <div class="perm-chip">📱 Device management</div>
+              <div class="perm-chip">👶 Child profiles</div>
+              <div class="perm-chip">🌐 Network filtering</div>
+              <div class="perm-chip">🔔 Parent alerts</div>
+            </div>
+            <div class="agent-card-footer" style="margin-top:14px;">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Every family member protected at every age</div>
+              <button class="btn btn-primary btn-xs" style="background:#1D4ED8;border-color:#1D4ED8;white-space:nowrap;">Set up</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Homework Helper -->
+        <div class="agent-card" data-cat="family">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#0D9488,#14B8A6);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#F0FDFA; font-size:1.625rem;">📐</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Homework Helper</div>
+                <div class="agent-tagline">Maths, science, English & more</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Explains homework problems step-by-step in plain language — designed for parents who want to help without just giving the answer. Covers KS1 to A-Level maths, sciences, English and languages. Photo scan your child's worksheet and get a clear explanation in seconds.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per session</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                2 credits
+              </span>
+            </div>
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Low</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Age range</span><span class="agent-stat-value">5–18</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📷 Camera (scan)</div>
+              <div class="perm-chip">👶 Child profiles</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Step-by-step explanation, not just the answer</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Family Scheduler -->
+        <div class="agent-card" data-cat="family">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#2563EB,#3B82F6);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#EFF6FF; font-size:1.625rem;">📅</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Family Scheduler</div>
+                <div class="agent-tagline">School runs, clubs & calendars</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Keeps the whole family's schedule in one place. Spots clashes, sends reminders to the right person, and books activities like swimming lessons or football clubs when spaces open up.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Medium</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Clashes prevented</span><span class="agent-stat-value">Weekly</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📅 Calendar access</div>
+              <div class="perm-chip">🔔 Push notifications</div>
+              <div class="perm-chip">👪 Family profiles</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> No more missed pickups or double-bookings</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kids Screen Time -->
+        <div class="agent-card" data-cat="family">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#DC2626,#F97316);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#FEF2F2; font-size:1.625rem;">🔒</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Screen Time Manager</div>
+                <div class="agent-tagline">Parental controls & digital wellbeing</div>
+              </div>
+              <span class="badge badge-amber">Beta</span>
+            </div>
+            <div class="agent-card-desc">Sets and manages screen time limits across your children's Vodafone devices. Schedules homework mode, bedtime restrictions and app-level controls — all from one place without needing to touch each device.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Devices managed</span><span class="agent-stat-value">Up to 8</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📱 Device management</div>
+              <div class="perm-chip">👶 Child profiles</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Controls set without tech battles</div>
+              <button class="btn btn-secondary btn-xs">Join waitlist</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Baby & Toddler Finder -->
+        <div class="agent-card" data-cat="family">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#7C3AED,#C084FC);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#FAF5FF; font-size:1.625rem;">🧸</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Activities Finder</div>
+                <div class="agent-tagline">Local classes, clubs & days out</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Finds and books local activities for your children based on age, interests and availability — from baby sensory sessions to after-school coding clubs. Checks availability and pays via your preferred method.</div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Medium</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Classes nearby</span><span class="agent-stat-value">200+</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📍 Location</div>
+              <div class="perm-chip">👶 Child profiles</div>
+              <div class="perm-chip">💳 Payment (confirm)</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Activity booked + added to family calendar</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SECTION HEADER: EVERYDAY LIFE ── -->
+        <div class="agents-section-hd" data-section="life">
+          <div class="agents-section-eyebrow">
+            <div class="agents-section-dot" style="background:#2563EB;"></div>
+            Everyday life
+          </div>
+          <div class="agents-section-sub">Life admin, shopping and getting things done</div>
+        </div>
+
+        <!-- Price Tracker -->
+        <div class="agent-card" data-cat="life">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#059669,#10B981);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#ECFDF5; font-size:1.625rem;">💰</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Price Tracker</div>
+                <div class="agent-tagline">Buy at the right moment</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Tell it what you want to buy and your target price. It monitors Amazon, John Lewis, Argos and more, then buys automatically when the price drops — or alerts you to decide. Works across electronics, clothing and appliances.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per purchase made</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                10 credits
+              </span>
+            </div>
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. saving</span><span class="agent-stat-value">£47</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">📋 Wishlist access</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Item bought at lowest price</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- GP Appointment Booker -->
+        <div class="agent-card" data-cat="life">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#0369A1,#0EA5E9);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#F0F9FF; font-size:1.625rem;">🏥</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">GP Appointment Booker</div>
+                <div class="agent-tagline">NHS & private appointments</div>
+              </div>
+              <span class="badge badge-amber">Beta</span>
+            </div>
+            <div class="agent-card-desc">Finds the earliest NHS or private GP appointment in your area, books it and adds it to your calendar. Can also rebook if your appointment gets cancelled and sends reminders before you're due.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per booking</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                5 credits
+              </span>
+            </div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">Medium</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Avg. wait reduction</span><span class="agent-stat-value">4 days</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">📍 Location</div>
+              <div class="perm-chip">📅 Calendar</div>
+              <div class="perm-chip">🏥 NHS login</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Appointment booked + reminder set</div>
+              <button class="btn btn-secondary btn-xs">Join waitlist</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Weekly Shop Planner -->
+        <div class="agent-card" data-cat="life">
+          <div class="agent-card-banner" style="background:linear-gradient(90deg,#D97706,#F59E0B);"></div>
+          <div class="agent-card-inner">
+            <div class="agent-card-top">
+              <div class="agent-icon" style="background:#FFFBEB; font-size:1.625rem;">🛒</div>
+              <div class="agent-card-meta">
+                <div class="agent-name">Weekly Shop Planner</div>
+                <div class="agent-tagline">Meals, ingredients & delivery</div>
+              </div>
+              <span class="badge badge-green">Active</span>
+            </div>
+            <div class="agent-card-desc">Plans your week's meals based on your household preferences, dietary requirements and what's already in the fridge. Builds the shopping list and orders from Tesco, Sainsbury's or Ocado — your choice.</div>
+            <div class="agent-cost-row">
+              <span class="agent-cost-label">Cost per order placed</span>
+              <span class="agent-cost-value">
+                <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+                8 credits
+              </span>
+            </div>
+            <div class="agent-card-stats">
+              <div class="agent-stat"><span class="agent-stat-label">Autonomy</span><span class="agent-stat-value">High</span></div>
+              <div class="agent-stat"><span class="agent-stat-label">Food waste reduced</span><span class="agent-stat-value">~30%</span></div>
+            </div>
+            <div class="agent-permissions">
+              <div class="perm-chip">💳 Payment (confirm)</div>
+              <div class="perm-chip">🛒 Supermarket linked</div>
+            </div>
+            <div class="agent-card-footer">
+              <div class="agent-outcome"><strong>✓ Outcome:</strong> Meal plan + weekly shop ordered</div>
+              <button class="btn btn-primary btn-xs">Try it</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-task">
+    <nav class="nav-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <span class="nav-title">Travel <span>Agent</span></span>
+      <div class="nav-actions" style="gap:6px;">
+        <button class="credits-pill" onclick="goTo('screen-credits')" title="V Credits">
+          <div class="credits-icon">
+            <svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          </div>
+          <span class="credits-amount">340</span>
+        </button>
+        <span class="badge badge-red" style="font-size:.6rem;">LIVE</span>
+      </div>
+    </nav>
+
+    <!-- Credit spend confirmation modal -->
+    <div class="modal-overlay" id="credits-modal">
+      <div class="modal-sheet">
+        <div class="modal-handle"></div>
+        <div class="modal-title">Confirm credit spend</div>
+        <div class="modal-sub">This agent task will use V Credits from your balance</div>
+        <div class="modal-cost-display">
+          <div class="modal-cost-left">
+            <div class="modal-cost-icon-lg">✈️</div>
+            <div>
+              <div class="modal-cost-task">Travel Agent</div>
+              <div class="modal-cost-desc">Tenerife · 4 people · 8 nights</div>
+            </div>
+          </div>
+          <div class="modal-cost-amount">
+            <div class="modal-cost-credits">60 <span>credits</span></div>
+            <div class="modal-cost-balance">340 remaining after</div>
+          </div>
+        </div>
+        <div class="modal-breakdown">
+          <div class="modal-breakdown-row">
+            <span class="modal-breakdown-label">Search & compare flights/hotels</span>
+            <span class="modal-breakdown-value">20 credits</span>
+          </div>
+          <div class="modal-breakdown-row">
+            <span class="modal-breakdown-label">Booking execution</span>
+            <span class="modal-breakdown-value">30 credits</span>
+          </div>
+          <div class="modal-breakdown-row">
+            <span class="modal-breakdown-label">Roaming add-on activation</span>
+            <span class="modal-breakdown-value red">Free</span>
+          </div>
+          <div class="modal-breakdown-row">
+            <span class="modal-breakdown-label">Your balance after this task</span>
+            <span class="modal-breakdown-value green">280 credits</span>
+          </div>
+        </div>
+        <div class="modal-earn-note">
+          <svg class="modal-earn-note-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <div>
+            <div class="modal-earn-note-text">You'll earn 15 credits back</div>
+            <div class="modal-earn-note-sub">Vodafone customers earn credits on every completed booking · Your Unlimited plan earns 1.5× rate</div>
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button class="btn btn-primary" style="flex:1;" onclick="dismissModal()">Confirm &amp; continue</button>
+          <button class="btn btn-secondary btn-sm" onclick="dismissModal()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Progress steps -->
+    <div class="task-progress">
+      <div class="task-progress-label">Booking progress</div>
+      <div class="progress-steps">
+        <div class="progress-step done">
+          <div class="progress-step-circle">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="progress-step-line"></div>
+        </div>
+        <div class="progress-step done">
+          <div class="progress-step-circle">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <div class="progress-step-line"></div>
+        </div>
+        <div class="progress-step active">
+          <div class="progress-step-circle">3</div>
+          <div class="progress-step-line"></div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-step-circle">4</div>
+          <div class="progress-step-line"></div>
+        </div>
+        <div class="progress-step">
+          <div class="progress-step-circle">5</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="scroll-area">
+      <div class="task-feed">
+
+        <!-- Initial request -->
+        <div class="task-item">
+          <div class="task-item-header">
+            <div class="task-item-icon" style="background:#FFF7ED;">✈️</div>
+            <div>
+              <div class="task-item-title">Your request</div>
+              <div class="task-item-desc">Received and understood</div>
+            </div>
+            <span class="badge badge-green">Done</span>
+          </div>
+          <div class="bubble bubble-ai" style="width:100%;">"Book me a family holiday somewhere warm in October with good connectivity"</div>
+        </div>
+
+        <!-- Clarification questions — answered -->
+        <div class="task-item">
+          <div class="task-item-header">
+            <div class="task-item-icon" style="background:#EBF5FC;">❓</div>
+            <div>
+              <div class="task-item-title">Quick questions</div>
+              <div class="task-item-desc">A few things to narrow it down</div>
+            </div>
+            <span class="badge badge-green">Done</span>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-size:.875rem; color:var(--vf-grey-60);">How many are travelling?</div>
+            <button class="q-option selected">2 adults, 2 children</button>
+            <div style="font-size:.875rem; color:var(--vf-grey-60); margin-top:4px;">Budget per person?</div>
+            <button class="q-option selected">£600 – £900</button>
+            <div style="font-size:.875rem; color:var(--vf-grey-60); margin-top:4px;">How long?</div>
+            <button class="q-option selected">7–10 nights</button>
+          </div>
+        </div>
+
+        <!-- Destination options -->
+        <div class="task-item">
+          <div class="task-item-header">
+            <div class="task-item-icon" style="background:#EAF5E7;">🌍</div>
+            <div>
+              <div class="task-item-title">Recommended destinations</div>
+              <div class="task-item-desc">Based on connectivity, weather & budget</div>
+            </div>
+            <span class="badge badge-green">Done</span>
+          </div>
+          <div class="destination-grid">
+            <div class="dest-card selected">
+              <div class="dest-card-img" style="background:linear-gradient(135deg,#FDB97D,#F4A259);">🇪🇸
+                <div class="selected-overlay">✓</div>
+              </div>
+              <div class="dest-card-body">
+                <div class="dest-name">Tenerife, Spain</div>
+                <div class="dest-sub">8 nights · Oct 12</div>
+                <div class="dest-badge-row">
+                  <span class="badge badge-green" style="font-size:.6rem;">5G covered</span>
+                  <span class="badge badge-blue" style="font-size:.6rem;">EU roaming</span>
+                </div>
+              </div>
+            </div>
+            <div class="dest-card">
+              <div class="dest-card-img" style="background:linear-gradient(135deg,#4db8e8,#1a7fb4);">🇬🇷</div>
+              <div class="dest-card-body">
+                <div class="dest-name">Rhodes, Greece</div>
+                <div class="dest-sub">7 nights · Oct 8</div>
+                <div class="dest-badge-row">
+                  <span class="badge badge-green" style="font-size:.6rem;">4G covered</span>
+                  <span class="badge badge-blue" style="font-size:.6rem;">EU roaming</span>
+                </div>
+              </div>
+            </div>
+            <div class="dest-card">
+              <div class="dest-card-img" style="background:linear-gradient(135deg,#e8a84d,#c4732a);">🇵🇹</div>
+              <div class="dest-card-body">
+                <div class="dest-name">Algarve, Portugal</div>
+                <div class="dest-sub">10 nights · Oct 5</div>
+                <div class="dest-badge-row">
+                  <span class="badge badge-green" style="font-size:.6rem;">5G covered</span>
+                  <span class="badge badge-blue" style="font-size:.6rem;">EU roaming</span>
+                </div>
+              </div>
+            </div>
+            <div class="dest-card">
+              <div class="dest-card-img" style="background:linear-gradient(135deg,#6db86d,#2d7a2d);">🇹🇷</div>
+              <div class="dest-card-body">
+                <div class="dest-name">Antalya, Türkiye</div>
+                <div class="dest-sub">9 nights · Oct 14</div>
+                <div class="dest-badge-row">
+                  <span class="badge badge-amber" style="font-size:.6rem;">Add-on needed</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent working -->
+        <div class="task-item agent-working">
+          <div class="agent-working-title">✦ Travel Agent is working…</div>
+          <div class="agent-working-sub">Booking Tenerife · 8 nights · 4 people</div>
+          <div class="agent-steps">
+            <div class="agent-step">
+              <div class="agent-step-indicator step-done">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="agent-step-label-done">Checked availability · 14 results found</span>
+            </div>
+            <div class="agent-step">
+              <div class="agent-step-indicator step-done">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </div>
+              <span class="agent-step-label-done">Selected best value option · £727pp</span>
+            </div>
+            <div class="agent-step">
+              <div class="agent-step-indicator step-active">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" class="spin"/></svg>
+              </div>
+              <span class="agent-step-label-active">Enabling EU roaming add-on…</span>
+            </div>
+            <div class="agent-step">
+              <div class="agent-step-indicator step-pending">4</div>
+              <span class="agent-step-label-pending">Confirming flights</span>
+            </div>
+            <div class="agent-step">
+              <div class="agent-step-indicator step-pending">5</div>
+              <span class="agent-step-label-pending">Sending booking summary</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trust notice -->
+        <div class="privacy-note" style="margin:0; background:rgba(26,138,0,.06); border-color:rgba(26,138,0,.2);">
+          <div class="privacy-note-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div>
+            <div class="privacy-note-title" style="font-size:.8125rem;">Payment requires your confirmation</div>
+            <div class="privacy-note-text">No payment will be taken without your explicit approval. You'll review the full booking before anything is confirmed.</div>
+          </div>
+        </div>
+
+        <!-- Confirmation card (preview) -->
+        <div class="confirm-card">
+          <div class="confirm-top">
+            <div class="confirm-icon">✅</div>
+            <div>
+              <div class="confirm-title">Ready to confirm</div>
+              <div class="confirm-sub">Review your booking before we finalise</div>
+            </div>
+          </div>
+          <div class="confirm-details">
+            <div class="confirm-row">
+              <span class="confirm-row-label">Destination</span>
+              <span class="confirm-row-value">Tenerife, Spain 🇪🇸</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">Dates</span>
+              <span class="confirm-row-value">12–20 Oct 2025</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">Travellers</span>
+              <span class="confirm-row-value">2 adults, 2 children</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">Hotel</span>
+              <span class="confirm-row-value">Hotel Botanico ★★★★</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">Flights</span>
+              <span class="confirm-row-value">Included · TUI direct</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">EU Roaming</span>
+              <span class="confirm-row-value" style="color:var(--vf-green);">✓ Enabled at no extra cost</span>
+            </div>
+            <div class="confirm-row">
+              <span class="confirm-row-label">Total cost</span>
+              <span class="confirm-row-value red">£2,908</span>
+            </div>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button class="btn btn-primary btn-sm" style="flex:1;" onclick="showModal()">Confirm booking · 60 credits</button>
+            <button class="btn btn-secondary btn-sm">Amend</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 5 — TRUST & CONTROL
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-trust">
+    <nav class="nav-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <span class="nav-title">Trust &amp; <span>Control</span></span>
+      <button class="icon-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      </button>
+    </nav>
+
+    <div class="scroll-area">
+
+      <div class="trust-hero">
+        <h2 class="trust-hero-title">You're always<br>in charge</h2>
+        <p class="trust-hero-sub">Every action VodafoneGPT takes is logged, reversible and visible here. Review permissions, manage agent access and undo anything you didn't intend.</p>
+      </div>
+
+      <!-- Vodafone identity -->
+      <div class="trust-section">
+        <div class="trust-section-title">Your Vodafone account</div>
+        <div class="identity-card">
+          <div class="identity-avatar">SJ</div>
+          <div>
+            <div class="identity-name">Sarah Johnson</div>
+            <div class="identity-email">sarah.j@email.com · 07700 900123</div>
+            <div class="identity-badge">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Verified · My Vodafone connected
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Permissions -->
+      <div class="trust-section" style="margin-top:20px;">
+        <div class="trust-section-title">Agent permissions</div>
+        <div class="permission-card">
+          <div class="perm-row">
+            <div class="perm-row-icon" style="background:#FEF2F2;">💳</div>
+            <div class="perm-row-content">
+              <div class="perm-row-title">Payment actions</div>
+              <div class="perm-row-desc">Require your confirmation before any purchase</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="perm-row">
+            <div class="perm-row-icon" style="background:#EBF5FC;">📋</div>
+            <div class="perm-row-content">
+              <div class="perm-row-title">Account changes</div>
+              <div class="perm-row-desc">Plan switches, add-ons and upgrades</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="perm-row">
+            <div class="perm-row-icon" style="background:#EAF5E7;">📍</div>
+            <div class="perm-row-content">
+              <div class="perm-row-title">Location access</div>
+              <div class="perm-row-desc">Used only for coverage and travel recommendations</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="perm-row">
+            <div class="perm-row-icon" style="background:#FFF7ED;">🔔</div>
+            <div class="perm-row-content">
+              <div class="perm-row-title">Proactive suggestions</div>
+              <div class="perm-row-desc">Alert me to savings and plan improvements</div>
+            </div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="perm-row">
+            <div class="perm-row-icon" style="background:#F5F3FF;">🤖</div>
+            <div class="perm-row-content">
+              <div class="perm-row-title">Autonomous task execution</div>
+              <div class="perm-row-desc">Allow agents to act without asking each step</div>
+            </div>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent AI activity -->
+      <div class="trust-section" style="margin-top:20px;">
+        <div class="trust-section-title">Recent AI activity</div>
+        <div class="activity-card">
+          <div class="activity-row">
+            <div class="activity-dot" style="background:var(--vf-green);"></div>
+            <div class="activity-content">
+              <div class="activity-title">Plan recommendation generated</div>
+              <div class="activity-sub">Suggested Unlimited Lite · £4/mo saving identified</div>
+            </div>
+            <div class="activity-time">2m ago</div>
+          </div>
+          <div class="activity-row">
+            <div class="activity-dot" style="background:var(--vf-green);"></div>
+            <div class="activity-content">
+              <div class="activity-title">Travel Agent: roaming enabled</div>
+              <div class="activity-sub">EU roaming add-on activated for Oct trip</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+              <div class="activity-time">1h ago</div>
+              <button class="undo-btn">Undo</button>
+            </div>
+          </div>
+          <div class="activity-row">
+            <div class="activity-dot" style="background:var(--vf-blue);"></div>
+            <div class="activity-content">
+              <div class="activity-title">Bill analysis completed</div>
+              <div class="activity-sub">Reviewed last 3 months · No unusual charges</div>
+            </div>
+            <div class="activity-time">Yesterday</div>
+          </div>
+          <div class="activity-row">
+            <div class="activity-dot" style="background:var(--vf-amber);"></div>
+            <div class="activity-content">
+              <div class="activity-title">Upgrade agent: device compared</div>
+              <div class="activity-sub">Compared 5 devices · No action taken</div>
+            </div>
+            <div class="activity-time">3 days ago</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Data transparency -->
+      <div class="trust-section" style="margin-top:20px; padding-bottom:20px;">
+        <div class="trust-section-title">How we use your data</div>
+        <div class="data-card">
+          <div class="data-row">
+            <svg class="data-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <div>
+              <div class="data-row-title">Hosted in the UK</div>
+              <div class="data-row-desc">Your data never leaves UK data centres. All processing is done on Vodafone infrastructure.</div>
+            </div>
+          </div>
+          <div class="data-row">
+            <svg class="data-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <div class="data-row-title">Not used to train external AI</div>
+              <div class="data-row-desc">Conversations are never shared with third-party AI providers or used to train models outside Vodafone.</div>
+            </div>
+          </div>
+          <div class="data-row">
+            <svg class="data-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.51"/></svg>
+            <div>
+              <div class="data-row-title">30-day conversation history</div>
+              <div class="data-row-desc">Chats are retained for 30 days to improve your experience. Delete anytime from your account.</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;">
+            <button class="btn btn-ghost btn-sm" style="padding-left:0;">View full privacy policy →</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 6 — CLAUDE HANDOFF
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-claude">
+    <nav class="nav-bar" style="background:linear-gradient(180deg,#1a0a2e,#0f0820);">
+      <button class="back-btn" style="color:rgba(255,255,255,.7);" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        VodafoneGPT
+      </button>
+      <div class="chat-header-extra">
+        <div class="handoff-claude-icon" style="width:28px;height:28px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="vf-ai-status">
+          <div class="vf-ai-name" style="color:white; font-size:.8125rem;">Claude by Anthropic</div>
+          <div class="vf-ai-online" style="color:rgba(167,139,250,1);">Extended assistance</div>
+        </div>
+      </div>
+      <div class="nav-actions">
+        <button class="icon-btn" style="color:rgba(255,255,255,.5);">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Handoff banner -->
+    <div class="handoff-banner">
+      <div class="handoff-claude-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      </div>
+      <div class="handoff-text">
+        <div class="handoff-title">Handed off to Claude</div>
+        <div class="handoff-sub">VodafoneGPT has passed your query for deeper assistance</div>
+      </div>
+    </div>
+
+    <!-- Explanation of handoff -->
+    <div class="handoff-explain">
+      VodafoneGPT has identified that your question needs <strong>broader knowledge or reasoning</strong> beyond its specialist network. You've been securely connected to <strong>Claude by Anthropic</strong> — Vodafone's extended AI partner for complex queries. Your account details have <strong>not</strong> been shared.
+    </div>
+
+    <div class="claude-chat-messages scroll-area">
+
+      <!-- Context message from VodafoneGPT -->
+      <div class="msg">
+        <div class="msg-avatar" style="background:var(--vf-red); color:white; font-size:.65rem; width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">AI</div>
+        <div class="msg-body">
+          <div class="bubble" style="background:var(--vf-grey-05); color:var(--vf-grey-60); font-size:.8125rem; font-style:italic; border:1px solid var(--vf-grey-10);">
+            VodafoneGPT: "Sarah needs help comparing mobile security tools for her small business — this is outside my specialised knowledge, so I'm connecting her to Claude."
+          </div>
+        </div>
+      </div>
+
+      <!-- User original question -->
+      <div class="msg msg-user">
+        <div class="msg-avatar msg-avatar-user">S</div>
+        <div class="msg-body">
+          <div class="bubble bubble-user">I run a small business with 6 employees all on Vodafone. What's the best way to protect against phishing and SIM-swap attacks? Should I be looking at enterprise MDM solutions or is there something simpler?</div>
+        </div>
+      </div>
+
+      <!-- Claude's response -->
+      <div class="msg">
+        <div class="claude-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="msg-body">
+          <div class="bubble bubble-claude">
+            <p>Great question, Sarah. For a 6-person business, you're in a useful middle ground — complex enough to need real protection, but small enough that enterprise MDM may be overkill.</p>
+            <p><strong>For phishing protection:</strong> Microsoft Defender for Business (£2.50/user/month) or Google Workspace's built-in protections are well-suited. Both include email scanning, safe link checking and admin controls.</p>
+            <p><strong>For SIM-swap specifically:</strong> Ask Vodafone to add a port-freeze or verbal passcode to your account — this stops number transfers without in-person verification. This is a free, underused protection.</p>
+            <p><strong>On MDM:</strong> Microsoft Intune is robust but complex. For 6 devices, consider <strong>Jamf Now</strong> (Apple) or <strong>Scalefusion</strong> — both have straightforward setup and are genuinely sized for small teams.</p>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+            <button class="btn btn-secondary btn-xs">Tell me more about SIM-swap</button>
+            <button class="btn btn-secondary btn-xs">Compare MDM options</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Another user question -->
+      <div class="msg msg-user">
+        <div class="msg-avatar msg-avatar-user">S</div>
+        <div class="msg-body">
+          <div class="bubble bubble-user">Does Vodafone offer any business security bundles that would cover this?</div>
+        </div>
+      </div>
+
+      <!-- Claude defers back to Vodafone -->
+      <div class="msg">
+        <div class="claude-avatar" style="width:30px;height:30px;border-radius:50%;flex-shrink:0;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="msg-body">
+          <div class="bubble bubble-claude">
+            <p>That's a great question to send back to VodafoneGPT — it has direct access to your account and Vodafone's current business security portfolio, so it'll give you accurate, up-to-date bundle options and pricing specific to your account.</p>
+            <p>Shall I hand you back?</p>
+          </div>
+          <div style="margin-top:8px;">
+            <button class="return-btn" onclick="goTo('screen-chat')" style="margin:0; width:auto; display:inline-flex; padding:10px 18px;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 9H11a6 6 0 1 0 0 12h9"/><polyline points="15 4 20 9 15 14"/></svg>
+              Return to VodafoneGPT
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Handoff footer note -->
+    <div class="handoff-note">
+      <svg class="handoff-note-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <div class="handoff-note-text"><strong>Privacy note:</strong> No account or personal data has been shared with Claude. This session is end-to-end encrypted and not stored by Anthropic.</div>
+    </div>
+
+    <button class="return-btn" onclick="goTo('screen-chat')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 9H11a6 6 0 1 0 0 12h9"/><polyline points="15 4 20 9 15 14"/></svg>
+      Return to VodafoneGPT
+    </button>
+
+    <!-- Chat input for Claude -->
+    <div class="chat-input-area" style="border-top:1px solid rgba(124,58,237,.2); background:linear-gradient(180deg,#faf8ff,white);">
+      <div class="chat-input-wrap" style="border-color:rgba(124,58,237,.25);">
+        <textarea class="chat-input" placeholder="Ask Claude anything…" rows="1"></textarea>
+        <button class="chat-send-btn" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SCREEN 7 — V CREDITS WALLET
+  ══════════════════════════════════════════════════════════ -->
+  <div class="screen" id="screen-credits">
+    <nav class="nav-bar">
+      <button class="back-btn" onclick="goBack()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back
+      </button>
+      <span class="nav-title">V <span>Credits</span></span>
+      <button class="icon-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      </button>
+    </nav>
+
+    <div class="scroll-area">
+
+      <!-- Hero balance -->
+      <div class="credits-hero">
+        <div class="credits-hero-content">
+          <div class="credits-hero-eyebrow">Your VodafoneGPT balance</div>
+          <div class="credits-balance-display">
+            <div class="credits-balance-number">340</div>
+            <div class="credits-balance-label">V Credits</div>
+          </div>
+          <div class="credits-renews">Resets <strong>1 November</strong> · 500 credits included with your plan</div>
+          <div class="credits-meter-wrap">
+            <div class="credits-meter-track">
+              <div class="credits-meter-fill" style="width:68%;"></div>
+            </div>
+            <div class="credits-meter-labels">
+              <span>0</span>
+              <span>340 used this month</span>
+              <span>500</span>
+            </div>
+          </div>
+          <div class="credits-hero-ctas">
+            <button class="btn btn-primary btn-sm">Top up credits</button>
+            <button class="btn btn-secondary btn-sm" style="background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.2); color:white;">See all plans</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- What V Credits are -->
+      <div style="padding:20px 20px 0;">
+        <div class="trust-section-title" style="margin-bottom:10px;">What are V Credits?</div>
+        <div style="font-size:.875rem; color:var(--vf-grey-60); line-height:1.6; background:var(--vf-white); border-radius:var(--radius-lg); padding:16px; border:1.5px solid var(--vf-grey-10);">
+          V Credits are how VodafoneGPT powers its AI agent actions. <strong style="color:var(--vf-black);">Chatting and asking questions are always free.</strong> Credits are only used when an agent completes an action on your behalf — like booking a restaurant, placing an order, or managing a task.
+          <br><br>
+          The more you use Vodafone, the more credits you earn. Upgrade your plan to unlock more.
+        </div>
+      </div>
+
+      <!-- Included in your plan -->
+      <div style="padding:20px 20px 0;">
+        <div class="trust-section-title" style="margin-bottom:10px;">Included in your plan</div>
+        <div class="credits-plan-banner">
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#FEF2F2;">📱</div>
+            <div>
+              <div class="credits-plan-label">Unlimited Lite</div>
+              <div class="credits-plan-sub">Your current plan</div>
+            </div>
+            <div>
+              <div class="credits-plan-amount">500 / mo</div>
+              <span class="credits-plan-badge badge badge-green" style="font-size:.6rem; margin-top:3px;">Active</span>
+            </div>
+          </div>
+          <div class="credits-plan-row" style="background:rgba(230,0,0,.03); cursor:pointer;" onclick="goTo('screen-chat')">
+            <div class="credits-plan-icon" style="background:#0D0D0D;">⚡</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Unlimited Max</div>
+              <div class="credits-plan-sub">2× credits · Priority agent access</div>
+            </div>
+            <div>
+              <div class="credits-plan-amount" style="color:var(--vf-grey-60);">1,000 / mo</div>
+              <span style="font-size:.6875rem; color:var(--vf-red); font-weight:700; display:block; text-align:right; margin-top:2px;">Upgrade →</span>
+            </div>
+          </div>
+          <div class="credits-plan-row" style="cursor:pointer;" onclick="goTo('screen-chat')">
+            <div class="credits-plan-icon" style="background:#1a0000; font-size:.9rem;">👑</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">VodafoneGPT Pro</div>
+              <div class="credits-plan-sub">Unlimited credits · All agents included</div>
+            </div>
+            <div>
+              <div class="credits-plan-amount" style="color:var(--vf-grey-60);">∞ / mo</div>
+              <span style="font-size:.6875rem; color:var(--vf-red); font-weight:700; display:block; text-align:right; margin-top:2px;">£8/mo add-on →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Credit costs at a glance -->
+      <div style="padding:20px 20px 0;">
+        <div class="trust-section-title" style="margin-bottom:10px;">What things cost</div>
+        <div class="credits-plan-banner">
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#F4F4F4; font-size:1rem;">💬</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Chat & questions</div>
+              <div class="credits-plan-sub">Ask anything, get answers</div>
+            </div>
+            <span class="agent-cost-free" style="flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Always free
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#EBF5FC; font-size:1rem;">📄</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Bill &amp; account help</div>
+              <div class="credits-plan-sub">View, explain, raise disputes</div>
+            </div>
+            <span class="agent-cost-free" style="flex-shrink:0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+              Free
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#F0FDFA; font-size:1rem;">📐</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Homework Helper</div>
+              <div class="credits-plan-sub">Per session</div>
+            </div>
+            <span class="agent-cost-value" style="flex-shrink:0;">
+              <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              2 credits
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#FEF2F2; font-size:1rem;">🍽️</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Restaurant booking</div>
+              <div class="credits-plan-sub">Per reservation made</div>
+            </div>
+            <span class="agent-cost-value" style="flex-shrink:0;">
+              <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              5 credits
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#ECFDF5; font-size:1rem;">💰</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Price Tracker purchase</div>
+              <div class="credits-plan-sub">Per item bought on your behalf</div>
+            </div>
+            <span class="agent-cost-value" style="flex-shrink:0;">
+              <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              10 credits
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#F4F4F4; font-size:1rem;">📱</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Device upgrade</div>
+              <div class="credits-plan-sub">Recommend &amp; checkout</div>
+            </div>
+            <span class="agent-cost-value" style="flex-shrink:0;">
+              <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              20 credits
+            </span>
+          </div>
+          <div class="credits-plan-row">
+            <div class="credits-plan-icon" style="background:#FFF7ED; font-size:1rem;">✈️</div>
+            <div style="flex:1;">
+              <div class="credits-plan-label">Travel booking</div>
+              <div class="credits-plan-sub">Flights, hotels &amp; roaming</div>
+            </div>
+            <span class="agent-cost-value" style="flex-shrink:0;">
+              <span class="agent-cost-icon"><svg width="8" height="8" viewBox="0 0 24 24" fill="white"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
+              40–80 credits
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transaction history -->
+      <div style="padding:20px 20px 0;">
+        <div class="trust-section-title" style="margin-bottom:10px;">Recent activity</div>
+        <div class="tx-list">
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#FEF2F2;">🍽️</div>
+            <div class="tx-detail">
+              <div class="tx-title">Restaurant booked · Dishoom Shoreditch</div>
+              <div class="tx-sub">Table for 4 · Sat 18 Oct · via OpenTable</div>
+            </div>
+            <div>
+              <div class="tx-amount debit">−5</div>
+              <div class="tx-time">Today</div>
+            </div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#F0FDFA;">📐</div>
+            <div class="tx-detail">
+              <div class="tx-title">Homework session · Year 9 Algebra</div>
+              <div class="tx-sub">3 problems explained</div>
+            </div>
+            <div>
+              <div class="tx-amount debit">−2</div>
+              <div class="tx-time">Yesterday</div>
+            </div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#EAF5E7;">⚡</div>
+            <div class="tx-detail">
+              <div class="tx-title">Monthly credit top-up</div>
+              <div class="tx-sub">Unlimited Lite plan · October 2025</div>
+            </div>
+            <div>
+              <div class="tx-amount credit">+500</div>
+              <div class="tx-time">1 Oct</div>
+            </div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#FFF7ED;">✈️</div>
+            <div class="tx-detail">
+              <div class="tx-title">Travel Agent · Rhodes holiday</div>
+              <div class="tx-sub">Flights + hotel + EU roaming</div>
+            </div>
+            <div>
+              <div class="tx-amount debit">−55</div>
+              <div class="tx-time">28 Sep</div>
+            </div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#ECFDF5;">💰</div>
+            <div class="tx-detail">
+              <div class="tx-title">Price Tracker · Sony headphones</div>
+              <div class="tx-sub">Bought at target price · Amazon</div>
+            </div>
+            <div>
+              <div class="tx-amount debit">−10</div>
+              <div class="tx-time">22 Sep</div>
+            </div>
+          </div>
+          <div class="tx-row">
+            <div class="tx-icon" style="background:#F5F3FF; font-size:.8rem; font-weight:700; color:#7c3aed;">+15</div>
+            <div class="tx-detail">
+              <div class="tx-title">Earned credits · Travel booking cashback</div>
+              <div class="tx-sub">1.5× rate on Unlimited plan</div>
+            </div>
+            <div>
+              <div class="tx-amount credit">+15</div>
+              <div class="tx-time">20 Sep</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upgrade nudge -->
+      <div class="upgrade-nudge" onclick="goTo('screen-chat')">
+        <div class="upgrade-nudge-icon">👑</div>
+        <div>
+          <div class="upgrade-nudge-title">Unlock unlimited credits</div>
+          <div class="upgrade-nudge-sub">VodafoneGPT Pro gives you unlimited agent actions for £8/mo. Available as an add-on to any plan.</div>
+        </div>
+        <svg class="upgrade-nudge-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       BOTTOM NAV
+  ══════════════════════════════════════════════════════════ -->
+  <nav class="bottom-nav" id="bottom-nav">
+    <button class="bottom-nav-item active" id="nav-home" onclick="goTo('screen-home')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span class="bottom-nav-label">Home</span>
+    </button>
+    <button class="bottom-nav-item" id="nav-chat" onclick="goTo('screen-chat')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="bottom-nav-label">Chat</span>
+    </button>
+    <button class="bottom-nav-item" id="nav-agents" onclick="goTo('screen-agents')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span class="bottom-nav-label">Agents</span>
+    </button>
+    <button class="bottom-nav-item" id="nav-credits" onclick="goTo('screen-credits')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <span class="bottom-nav-label">Credits</span>
+    </button>
+    <button class="bottom-nav-item" id="nav-trust" onclick="goTo('screen-trust')">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span class="bottom-nav-label">Trust</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+  const screenHistory = ['screen-home'];
+  let currentScreen = 'screen-home';
+
+  const navMap = {
+    'screen-home':    'nav-home',
+    'screen-chat':    'nav-chat',
+    'screen-agents':  'nav-agents',
+    'screen-trust':   'nav-trust',
+    'screen-credits': 'nav-credits',
+    'screen-task':    null,
+    'screen-claude':  null,
+  };
+
+  function goTo(id) {
+    if (id === currentScreen) return;
+
+    const prev = document.getElementById(currentScreen);
+    const next = document.getElementById(id);
+    if (!next) return;
+
+    prev.classList.remove('active');
+    prev.classList.add('prev');
+    next.style.transform = 'translateX(100%)';
+    next.classList.add('active');
+    next.getBoundingClientRect();
+    next.style.transform = '';
+
+    setTimeout(() => { prev.classList.remove('prev'); }, 400);
+
+    screenHistory.push(id);
+    currentScreen = id;
+
+    document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+    const navId = navMap[id];
+    if (navId) document.getElementById(navId)?.classList.add('active');
+
+    const bottomNav = document.getElementById('bottom-nav');
+    const hideNav = ['screen-task','screen-claude'].includes(id);
+    bottomNav.style.opacity = hideNav ? '0' : '1';
+    bottomNav.style.pointerEvents = hideNav ? 'none' : '';
+  }
+
+  function goBack() {
+    if (screenHistory.length <= 1) return;
+    screenHistory.pop();
+    const prev = screenHistory[screenHistory.length - 1];
+
+    const curr = document.getElementById(currentScreen);
+    const target = document.getElementById(prev);
+
+    curr.classList.remove('active');
+    curr.style.transform = 'translateX(100%)';
+    setTimeout(() => { curr.style.transform = ''; }, 400);
+
+    target.classList.add('active');
+    currentScreen = prev;
+
+    document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+    const navId = navMap[prev];
+    if (navId) document.getElementById(navId)?.classList.add('active');
+
+    const bottomNav = document.getElementById('bottom-nav');
+    const hideNav = ['screen-task','screen-claude'].includes(prev);
+    bottomNav.style.opacity = hideNav ? '0' : '1';
+    bottomNav.style.pointerEvents = hideNav ? 'none' : '';
+  }
+
+  // Credit spend modal
+  function showModal() {
+    const m = document.getElementById('credits-modal');
+    if (m) m.classList.add('show');
+  }
+  function dismissModal() {
+    const m = document.getElementById('credits-modal');
+    if (m) m.classList.remove('show');
+  }
+  // Close modal on overlay tap
+  document.getElementById('credits-modal')?.addEventListener('click', function(e) {
+    if (e.target === this) dismissModal();
+  });
+
+  // Plan card selection
+  document.querySelectorAll('.plan-card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.closest('.plan-scroll')?.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  // Destination card selection
+  document.querySelectorAll('.dest-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.dest-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  // Option selection
+  document.querySelectorAll('.q-option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      const group = opt.closest('.task-item');
+      group?.querySelectorAll('.q-option').forEach(o => o.classList.remove('selected'));
+      opt.classList.add('selected');
+    });
+  });
+
+  // Textarea auto-grow
+  document.querySelectorAll('.chat-input').forEach(ta => {
+    ta.addEventListener('input', () => {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    });
+  });
+
+  // Toggle switches
+  document.querySelectorAll('.toggle').forEach(t => {
+    t.addEventListener('click', () => t.classList.toggle('on'));
+  });
+
+  // Meter animation on credits screen entry
+  const origGoTo = goTo;
+  function animateCreditsOnEntry(id) {
+    if (id === 'screen-credits') {
+      setTimeout(() => {
+        const fill = document.querySelector('.credits-meter-fill');
+        if (fill) { fill.style.width = '0'; setTimeout(() => { fill.style.width = '68%'; }, 80); }
+      }, 200);
+    }
+  }
+
+  // ── PASSWORD GATE ──
+  (function() {
+    const PASSWORD = 'ProtoVGPT';
+    const SESSION_KEY = 'vgpt_auth';
+
+    if (sessionStorage.getItem(SESSION_KEY) === '1') return;
+
+    const gate = document.createElement('div');
+    gate.id = 'gate';
+    gate.innerHTML = `
+      <div style="width:100%;max-width:360px;position:relative;z-index:1;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:36px;">
+          <div style="width:40px;height:40px;background:#E60000;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          </div>
+          <span style="font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.25rem;font-weight:700;color:white;letter-spacing:-.02em;">Vodafone<span style="color:#E60000;">GPT</span></span>
+        </div>
+        <div style="margin-bottom:8px;font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;font-size:1.5rem;font-weight:700;color:white;letter-spacing:-.03em;line-height:1.2;">Prototype preview</div>
+        <div style="margin-bottom:28px;font-size:.9rem;color:rgba(255,255,255,.5);font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;line-height:1.5;">Enter the access password to view this prototype.</div>
+        <div id="gate-input-wrap" style="display:flex;gap:10px;margin-bottom:12px;">
+          <input id="gate-input" type="password" placeholder="Password" autocomplete="off"
+            style="flex:1;padding:14px 16px;border-radius:999px;border:1.5px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);color:white;font-size:1rem;font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;outline:none;transition:border-color 200ms;"
+            onfocus="this.style.borderColor='#E60000'" onblur="this.style.borderColor='rgba(255,255,255,.15)'"
+          />
+          <button id="gate-btn"
+            style="padding:14px 24px;border-radius:999px;background:#E60000;color:white;font-size:1rem;font-weight:700;font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;border:none;cursor:pointer;white-space:nowrap;transition:background 200ms;"
+            onmouseover="this.style.background='#BD0000'" onmouseout="this.style.background='#E60000'"
+          >Enter</button>
+        </div>
+        <div id="gate-error" style="display:none;color:#FF6B6B;font-size:.875rem;font-family:'Vodafone Rg','Helvetica Neue',Helvetica,Arial,sans-serif;padding-left:16px;">Incorrect password. Please try again.</div>
+      </div>
+    `;
+    gate.style.cssText = `
+      position:fixed;inset:0;
+      background:linear-gradient(160deg,#0D0D0D 0%,#1a0000 60%,#2a0000 100%);
+      display:flex;align-items:center;justify-content:center;
+      z-index:9999;padding:32px 24px;
+    `;
+
+    document.body.appendChild(gate);
+    document.getElementById('gate-input').focus();
+
+    function attempt() {
+      const val = document.getElementById('gate-input').value;
+      if (val === PASSWORD) {
+        sessionStorage.setItem(SESSION_KEY, '1');
+        gate.style.transition = 'opacity 400ms ease';
+        gate.style.opacity = '0';
+        setTimeout(() => gate.remove(), 420);
+      } else {
+        document.getElementById('gate-error').style.display = 'block';
+        const input = document.getElementById('gate-input');
+        input.value = '';
+        input.style.borderColor = '#FF6B6B';
+        setTimeout(() => { input.style.borderColor = 'rgba(255,255,255,.15)'; }, 1200);
+        input.focus();
+      }
+    }
+
+    document.getElementById('gate-btn').addEventListener('click', attempt);
+    document.getElementById('gate-input').addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+  })();
+
+  // Filter pills with category-aware show/hide
+  document.querySelectorAll('.filter-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      pill.closest('.agents-filter-row')?.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+
+      const filter = pill.dataset.filter || 'all';
+      const grid = document.getElementById('agents-grid');
+      if (!grid) return;
+
+      grid.querySelectorAll('.agent-card').forEach(card => {
+        const cats = (card.dataset.cat || '').split(' ');
+        card.style.display = (filter === 'all' || cats.includes(filter)) ? '' : 'none';
+      });
+
+      grid.querySelectorAll('.agents-section-hd').forEach(hd => {
+        if (filter === 'all') { hd.style.display = ''; return; }
+        let sibling = hd.nextElementSibling;
+        let hasVisible = false;
+        while (sibling && !sibling.classList.contains('agents-section-hd')) {
+          if (sibling.classList.contains('agent-card')) {
+            const cats = (sibling.dataset.cat || '').split(' ');
+            if (cats.includes(filter)) { hasVisible = true; break; }
+          }
+          sibling = sibling.nextElementSibling;
+        }
+        hd.style.display = hasVisible ? '' : 'none';
+      });
+    });
+  });
+</script>
+</body>
+</html>
